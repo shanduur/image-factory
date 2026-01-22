@@ -105,6 +105,20 @@ spec:
       toplevel: true
     - name: docker-compose-down
       toplevel: true
+    - name: talosctl
+      toplevel: true
+    - name: helm
+      toplevel: true
+    - name: kuttl
+      toplevel: true
+    - name: kubernetes-up
+      toplevel: true
+    - name: kubernetes-down
+      toplevel: true
+    - name: helm-install
+      toplevel: true
+    - name: kuttl-test
+      toplevel: true
 ---
 kind: custom.Step
 name: imager-base
@@ -822,6 +836,110 @@ spec:
     script:
       - |
         @if test -n "`git status --porcelain`"; then echo "Source tree is dirty"; git status; git diff; exit 1 ; fi
+  ghaction:
+    enabled: true
+    condition: on-pull-request
+---
+kind: custom.Step
+name: talosctl
+spec:
+  makefile:
+    enabled: true
+    phony: false
+    variables:
+      - name: TALOS_VERSION
+        defaultValue: 1.12.1
+    script:
+      - |
+        curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/$(TALOS_VERSION)/talosctl-$(shell uname -s | tr "[:upper:]" "[:lower:]")-amd64
+        chmod +x ./talosctl
+---
+kind: custom.Step
+name: kubernetes-up
+spec:
+  makefile:
+    enabled: true
+    phony: true
+    depends:
+      - talosctl
+    variables:
+      - name: K8S_VERSION
+        defaultValue: 1.35.0
+    script:
+      - |
+        ./talosctl cluster create docker \
+            --name=image-factory-env \
+            --talosconfig-destination=talosconfig \
+            --kubernetes-version=$(K8S_VERSION) \
+            --mtu=1450
+        ./talosctl kubeconfig kubeconfig \
+            --talosconfig=talosconfig \
+            --nodes=10.5.0.2 \
+            --force
+  ghaction:
+    enabled: true
+    condition: on-pull-request
+---
+kind: custom.Step
+name: kubernetes-down
+spec:
+  makefile:
+    enabled: true
+    phony: true
+    depends:
+      - talosctl
+    script:
+      - |
+        ./talosctl cluster destroy \
+            --name=image-factory-env
+        rm -f talosconfig kubeconfig
+---
+kind: custom.Step
+name: helm
+spec:
+  makefile:
+    enabled: true
+    phony: false
+    script:
+      - |
+        TODO: install helm tool
+---
+kind: custom.Step
+name: kuttl
+spec:
+  makefile:
+    enabled: true
+    phony: false
+    script:
+      - |
+        TODO: install kuttl tool
+---
+kind: custom.Step
+name: helm-install
+spec:
+  makefile:
+    enabled: true
+    phony: true
+    depends:
+      - helm
+    script:
+      - |
+        TODO: helm install
+  ghaction:
+    enabled: true
+    condition: on-pull-request
+---
+kind: custom.Step
+name: kuttl-test
+spec:
+  makefile:
+    enabled: true
+    phony: true
+    depends:
+      - kuttl
+    script:
+      - |
+        TODO: helm install
   ghaction:
     enabled: true
     condition: on-pull-request

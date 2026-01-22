@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-09T09:46:37Z by kres 0e8da31.
+# Generated on 2026-01-22T09:30:27Z by kres 1ffefb6.
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -121,6 +121,18 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           make check-dirty
+      - name: kubernetes-up
+        if: github.event_name == 'pull_request'
+        run: |
+          make kubernetes-up
+      - name: helm-install
+        if: github.event_name == 'pull_request'
+        run: |
+          make helm-install
+      - name: kuttl-test
+        if: github.event_name == 'pull_request'
+        run: |
+          make kuttl-test
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |

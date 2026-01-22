@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-21T13:19:04Z by kres 1ffefb6.
+# Generated on 2026-01-22T09:30:27Z by kres 1ffefb6.
 
 # common variables
 
@@ -90,6 +90,8 @@ RUN_TESTS_S3 ?= TestIntegrationS3
 RUN_TESTS_CDN ?= TestIntegrationCDN
 RUN_TESTS_PROXY ?= TestIntegrationDirect
 RUN_TESTS_ENTERPRISE ?= TestIntegrationDirect
+TALOS_VERSION ?= 1.12.1
+K8S_VERSION ?= 1.35.0
 
 # help menu
 
@@ -349,6 +351,42 @@ docker-compose-up:
 .PHONY: docker-compose-down
 docker-compose-down:
 	@IMAGE_FACTORY_IMAGE=$(REGISTRY)/$(USERNAME)/image-factory:$(IMAGE_TAG) docker compose -f hack/dev/compose.yaml down
+
+talosctl:
+	curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/$(TALOS_VERSION)/talosctl-$(shell uname -s | tr "[:upper:]" "[:lower:]")-amd64
+	chmod +x ./talosctl
+
+helm:
+	TODO: install helm tool
+
+kuttl:
+	TODO: install kuttl tool
+
+.PHONY: kubernetes-up
+kubernetes-up: talosctl
+	./talosctl cluster create docker \
+	    --name=image-factory-env \
+	    --talosconfig-destination=talosconfig \
+	    --kubernetes-version=$(K8S_VERSION) \
+	    --mtu=1450
+	./talosctl kubeconfig kubeconfig \
+	    --talosconfig=talosconfig \
+	    --nodes=10.5.0.2 \
+	    --force
+
+.PHONY: kubernetes-down
+kubernetes-down: talosctl
+	./talosctl cluster destroy \
+	    --name=image-factory-env
+	rm -f talosconfig kubeconfig
+
+.PHONY: helm-install
+helm-install: helm
+	TODO: helm install
+
+.PHONY: kuttl-test
+kuttl-test: kuttl
+	TODO: helm install
 
 .PHONY: rekres
 rekres:
