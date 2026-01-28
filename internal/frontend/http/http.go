@@ -36,6 +36,7 @@ import (
 	"github.com/siderolabs/image-factory/internal/schematic"
 	"github.com/siderolabs/image-factory/internal/schematic/storage"
 	"github.com/siderolabs/image-factory/internal/secureboot"
+	"github.com/siderolabs/image-factory/internal/spdx"
 	"github.com/siderolabs/image-factory/internal/version"
 	schematicpkg "github.com/siderolabs/image-factory/pkg/schematic"
 )
@@ -47,6 +48,7 @@ type Frontend struct {
 	assetBuilder      *asset.Builder
 	artifactsManager  *artifacts.Manager
 	secureBootService *secureboot.Service
+	spdxBuilder       *spdx.Builder
 	logger            *zap.Logger
 	puller            remotewrap.Puller
 	pusher            remotewrap.Pusher
@@ -76,6 +78,7 @@ func NewFrontend(
 	assetBuilder *asset.Builder,
 	artifactsManager *artifacts.Manager,
 	secureBootService *secureboot.Service,
+	spdxBuilder *spdx.Builder,
 	opts Options,
 ) (*Frontend, error) {
 	frontend := &Frontend{
@@ -84,6 +87,7 @@ func NewFrontend(
 		assetBuilder:      assetBuilder,
 		artifactsManager:  artifactsManager,
 		secureBootService: secureBootService,
+		spdxBuilder:       spdxBuilder,
 		logger:            logger.With(zap.String("frontend", "http")),
 		options:           opts,
 	}
@@ -139,6 +143,10 @@ func NewFrontend(
 	// schematic
 	registerRoute(frontend.router.POST, "/schematics", frontend.handleSchematicCreate)
 	registerRoute(frontend.router.GET, "/schematics/:schematic", frontend.handleSchematicGet)
+
+	// SPDX
+	registerRoute(frontend.router.GET, "/spdx/:schematic/:version", frontend.handleSPDX)
+	registerRoute(frontend.router.HEAD, "/spdx/:schematic/:version", frontend.handleSPDX)
 
 	// meta
 	registerRoute(frontend.router.GET, "/versions", frontend.handleVersions)

@@ -45,6 +45,8 @@ import (
 	schematiccache "github.com/siderolabs/image-factory/internal/schematic/storage/cache"
 	schematicreg "github.com/siderolabs/image-factory/internal/schematic/storage/registry"
 	"github.com/siderolabs/image-factory/internal/secureboot"
+	"github.com/siderolabs/image-factory/internal/spdx"
+	spdxreg "github.com/siderolabs/image-factory/internal/spdx/storage/registry"
 	"github.com/siderolabs/image-factory/internal/version"
 	"github.com/siderolabs/image-factory/pkg/enterprise"
 )
@@ -109,6 +111,14 @@ func RunFactory(ctx context.Context, logger *zap.Logger, opts Options) error {
 		return fmt.Errorf("failed to initialize SecureBoot service: %w", err)
 	}
 
+	// Build SPDX storage and builder
+	spdxStorage, err := buildSPDXStorage(logger, cacheSigningKey, opts)
+	if err != nil {
+		return err
+	}
+
+	spdxBuilder := spdx.NewBuilder(logger, spdxStorage, artifactsManager, configFactory)
+
 	var frontendOptions frontendhttp.Options
 
 	frontendOptions.CacheSigningKey = cacheSigningKey
@@ -152,7 +162,7 @@ func RunFactory(ctx context.Context, logger *zap.Logger, opts Options) error {
 	frontendOptions.MetricsNamespace = opts.Metrics.Namespace
 	frontendOptions.AllowedOrigins = opts.HTTP.AllowedOrigins
 
-	frontendHTTP, err := frontendhttp.NewFrontend(logger, configFactory, assetBuilder, artifactsManager, secureBootService, frontendOptions)
+	frontendHTTP, err := frontendhttp.NewFrontend(logger, configFactory, assetBuilder, artifactsManager, secureBootService, spdxBuilder, frontendOptions)
 	if err != nil {
 		return fmt.Errorf("failed to initialize HTTP frontend: %w", err)
 	}
@@ -419,6 +429,31 @@ func buildSchematicFactory(logger *zap.Logger, opts Options) (*schematic.Factory
 	prometheus.MustRegister(factory)
 
 	return factory, nil
+}
+
+func buildSPDXStorage(logger *zap.Logger, cacheSigningKey crypto.PrivateKey, opts Options) (*spdxreg.Storage, error) {
+	var repoOpts []name.Option
+
+	if opts.Cache.OCI.Insecure {
+		repoOpts = append(repoOpts, name.Insecure)
+	}
+
+	cacheRepository, err := name.NewRepository(opts.Cache.OCI.String(), repoOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cache repository: %w", err)
+	}
+
+	spdxStorage, err := spdxreg.NewStorage(logger, spdxreg.Options{
+		CacheRepository:         cacheRepository,
+		CacheSigningKey:         cacheSigningKey,
+		RemoteOptions:           remoteOptions(),
+		RegistryRefreshInterval: opts.Artifacts.RefreshInterval,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize SPDX storage: %w", err)
+	}
+
+	return spdxStorage, nil
 }
 
 // remoteOptions returns options for remote registry access.
