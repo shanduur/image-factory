@@ -7,6 +7,8 @@ go 1.26.1
 // our extensions
 replace github.com/google/go-containerregistry => github.com/google/go-containerregistry v0.21.2
 
+replace github.com/siderolabs/go-vex => ../siderolabs-go-vex
+
 require (
 	cloud.google.com/go/auth v0.20.0
 	github.com/CalebQ42/squashfs v1.4.1
@@ -15,7 +17,6 @@ require (
 	github.com/google/go-containerregistry v0.21.5
 	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/in-toto/attestation v1.2.0
 	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/julienschmidt/httprouter v1.3.0
@@ -38,6 +39,7 @@ require (
 	github.com/siderolabs/go-blockdevice/v2 v2.0.28
 	github.com/siderolabs/go-debug v0.6.2
 	github.com/siderolabs/go-pointer v1.0.1
+	github.com/siderolabs/go-vex v0.0.0
 	github.com/siderolabs/talos v1.13.0-rc.0
 	github.com/siderolabs/talos/pkg/machinery v1.13.0-rc.0
 	github.com/sigstore/cosign/v3 v3.0.6
@@ -179,6 +181,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-envparse v0.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/in-toto/in-toto-golang v0.10.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -216,6 +219,8 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/opencontainers/runc v1.3.0 // indirect
 	github.com/opencontainers/runtime-spec v1.3.0 // indirect
+	github.com/openvex/go-vex v0.2.7 // indirect
+	github.com/package-url/packageurl-go v0.1.3 // indirect
 	github.com/petermattis/goid v0.0.0-20260226131333-17d1149c6ac6 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect

@@ -201,6 +201,18 @@ type CacheOptions struct {
 
 	// Schematic contains configuration for caching schematic blobs.
 	Schematic SchematicCacheOptions `koanf:"schematic"`
+
+	// VEX contains configuration for VEX data fetching.
+	VEX VEXCacheOptions `koanf:"vex"`
+}
+
+// VEXCacheOptions configures VEX data caching.
+type VEXCacheOptions struct {
+	// Registry is the OCI registry for VEX data.
+	Registry string `koanf:"registry"`
+
+	// CacheTTL is the duration for caching generated VEX documents.
+	CacheTTL time.Duration `koanf:"cacheTTL"`
 }
 
 // GSASigningOptions configures Google Service Account keyless image signing via Sigstore Fulcio.
@@ -450,6 +462,10 @@ var DefaultOptions = Options{
 		Schematic: SchematicCacheOptions{
 			Capacity:    100_000,
 			NegativeTTL: 30 * time.Second,
+		},
+		VEX: VEXCacheOptions{
+			Registry: "ghcr.io/siderolabs/vex/talos",
+			CacheTTL: 5 * time.Minute,
 		},
 	},
 
