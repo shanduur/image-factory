@@ -121,6 +121,12 @@ spec:
       toplevel: true
     - name: chart-version
       toplevel: true
+    - name: $(ARTIFACTS)/image-signer
+      toplevel: true
+    - name: sign-images
+      toplevel: true
+    - name: push-talos-vex-data
+      toplevel: true
 ---
 kind: custom.Step
 name: imager-base
@@ -563,7 +569,7 @@ spec:
     environment:
       REGISTRY: registry.dev.siderolabs.io
       RUN_TESTS_ENTERPRISE: TestIntegrationDirect
-      TEST_FLAGS: "-test.schematic-service-repository=127.0.0.1:5100/image-factory/schematic -test.installer-internal-repository=127.0.0.1:5100/siderolabs -test.cache-repository=127.0.0.1:5100/image-factory/cache -test.signing-cache-repository=127.0.0.1:5100/image-factory/signing-cache"
+      TEST_FLAGS: "-test.schematic-service-repository=127.0.0.1:5100/image-factory/schematic -test.installer-internal-repository=127.0.0.1:5100/siderolabs -test.cache-repository=127.0.0.1:5100/image-factory/cache -test.signing-cache-repository=127.0.0.1:5100/image-factory/signing-cache -test.vex-data-repository=ghcr.io/siderolabs/image-factory/test-vex-data"
       TAG_SUFFIX: "-enterprise"
 ---
 kind: custom.Step
@@ -816,6 +822,49 @@ spec:
       runnerGroup: large
     environment:
       REGISTRY: registry.dev.siderolabs.io
+---
+kind: custom.Step
+name: $(ARTIFACTS)/image-signer
+spec:
+  makefile:
+    variables:
+      - name: GO_TOOLS_RELEASE
+        defaultValue: v0.3.1
+    enabled: true
+    phony: true
+    depends:
+      - $(ARTIFACTS)
+    script:
+      - |
+        @curl -sSL https://github.com/siderolabs/go-tools/releases/download/$(GO_TOOLS_RELEASE)/image-signer-$(OPERATING_SYSTEM)-$(GOARCH) -o $(ARTIFACTS)/image-signer
+        @chmod +x $(ARTIFACTS)/image-signer
+---
+kind: custom.Step
+name: sign-images
+spec:
+  makefile:
+    enabled: true
+    phony: true
+    depends:
+      - $(ARTIFACTS)/image-signer
+    script:
+      - |
+        @$(ARTIFACTS)/image-signer sign --timeout=15m \
+          $(TALOS_VEX_DATA_IMAGE_REF)@$$(crane digest $(TALOS_VEX_DATA_IMAGE_REF))
+---
+kind: custom.Step
+name: push-talos-vex-data
+spec:
+  makefile:
+    variables:
+      - name: TALOS_VEX_DATA_IMAGE_REF
+        defaultValue: $(REGISTRY_AND_USERNAME)/image-factory/test-vex-data:latest
+    enabled: true
+    phony: true
+    script:
+      - |
+        @tar -C $(PWD)/internal/integration/testdata/vex-data -cvf $(PWD)/$(ARTIFACTS)/test-vulnerability-data.tar .
+        @crane append -f $(PWD)/$(ARTIFACTS)/test-vulnerability-data.tar -t $(TALOS_VEX_DATA_IMAGE_REF)
 ---
 kind: golang.UnitTests
 spec:

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package image_test
+package verify_test
 
 import (
 	"testing"
@@ -12,16 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/siderolabs/image-factory/internal/artifacts/internal/image"
+	"github.com/siderolabs/image-factory/internal/image/verify"
 )
 
-func siderolabsVerifyOptions(t *testing.T) image.VerifyOptions {
+func siderolabsVerifyOptions(t *testing.T) verify.VerifyOptions {
 	t.Helper()
 
 	trustedRoot, err := cosign.TrustedRoot()
 	require.NoError(t, err)
 
-	return image.VerifyOptions{
+	return verify.VerifyOptions{
 		CheckOpts: []cosign.CheckOpts{
 			{
 				TrustedMaterial: trustedRoot,
@@ -40,7 +40,7 @@ func siderolabsVerifyOptions(t *testing.T) image.VerifyOptions {
 func TestVerifyLegacy(t *testing.T) {
 	t.Parallel()
 
-	result, err := image.VerifySignatures(
+	result, err := verify.VerifySignatures(
 		t.Context(),
 		name.MustParseReference("ghcr.io/siderolabs/talos:v1.11.0"),
 		siderolabsVerifyOptions(t),
@@ -54,7 +54,7 @@ func TestVerifyLegacy(t *testing.T) {
 func TestVerifyBundledSuccess(t *testing.T) {
 	t.Parallel()
 
-	result, err := image.VerifySignatures(
+	result, err := verify.VerifySignatures(
 		t.Context(),
 		name.MustParseReference("ghcr.io/siderolabs/talos:v1.11.5"),
 		siderolabsVerifyOptions(t),
@@ -68,7 +68,7 @@ func TestVerifyBundledSuccess(t *testing.T) {
 func TestVerifyFailure(t *testing.T) {
 	t.Parallel()
 
-	_, err := image.VerifySignatures(
+	_, err := verify.VerifySignatures(
 		t.Context(),
 		name.MustParseReference("ghcr.io/siderolabs/talos:v0.8.0"),
 		siderolabsVerifyOptions(t),

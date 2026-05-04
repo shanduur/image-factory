@@ -17,6 +17,7 @@ import (
 	"github.com/siderolabs/image-factory/internal/artifacts"
 	"github.com/siderolabs/image-factory/internal/asset"
 	"github.com/siderolabs/image-factory/internal/image/signer"
+	"github.com/siderolabs/image-factory/internal/image/verify"
 	"github.com/siderolabs/image-factory/internal/schematic"
 )
 
@@ -39,6 +40,16 @@ type SPDXOptions struct {
 	RemoteOptions           []remote.Option
 	RegistryRefreshInterval time.Duration
 	CacheInsecure           bool
+}
+
+// VEXOptions holds configuration options for the VEX frontend.
+type VEXOptions struct {
+	Data            string
+	RemoteOptions   []remote.Option
+	VerifyOptions   verify.VerifyOptions
+	RefreshInterval time.Duration
+	CacheTTL        time.Duration
+	DataInsecure    bool
 }
 
 // ErrNotEnabledTag tags errors that occur when an enterprise feature is

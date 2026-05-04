@@ -1,0 +1,389 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-626e3bf1d299a4df3a418b2b8286b1cebf4f3270cf273d1b8521a714cfe230ce",
+  "author": "Sidero Labs (https://siderolabs.com/)",
+  "version": 1,
+  "tooling": "image-factory",
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-1999-0524"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "affected",
+      "action_statement": "This is a very common CVE of Low severity, however if it is a concern you need to configure your firewall\nto reject ICMP timestamp requests. However, this does not have high impact on security in most cases.\n",
+      "timestamp": "2025-07-19T12:40:16Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-1999-0656"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-09-10T11:55:00Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2006-2932"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2007-2764"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2007-4998"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "not_affected",
+      "status_notes": "Talos Linux doesn't ship coreutils/busybox.\n",
+      "justification": "vulnerable_code_not_present",
+      "timestamp": "2025-09-10T10:55:00Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2008-2544"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2008-4609"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2010-4563"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2014-8171"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2016-0774"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2016-3695"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2016-3699"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2017-1000255"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "not_affected",
+      "status_notes": "Talos does not target PowerPC architecture, so the affected code is not being built.\n",
+      "justification": "vulnerable_code_not_present",
+      "timestamp": "2025-07-18T20:02:23Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2017-1000377"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "not_affected",
+      "status_notes": "This vulnerability concerns PAX Linux, a patch set that is not applied to Talos Linux.\n",
+      "justification": "vulnerable_code_not_present",
+      "timestamp": "2025-07-18T11:54:44Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2017-6264"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2018-10840"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2018-10876"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2018-10882"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2018-10902"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2018-14625"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2018-6559"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2019-14899"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2019-3016"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2019-3819"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2019-3887"
+      },
+      "products": [
+        {
+          "identifiers": {
+            "purl": "pkg:generic/talos@v1.13.0"
+          }
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "CVE from long before Linux 6.12, considered fixed by the time of disclosure\n",
+      "timestamp": "2025-07-18T20:34:39Z"
+    }
+  ],
+  "timestamp": "2026-05-05T13:52:39Z"
+}
+

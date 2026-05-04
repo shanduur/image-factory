@@ -1,0 +1,133 @@
+author: "Sidero Labs (https://siderolabs.com/)"
+ids:
+  purl: pkg:generic/talos
+statements:
+  - created: 2025-07-19T12:40:16Z
+    name: CVE-1999-0524
+    status: affected
+    action: |
+      This is a very common CVE of Low severity, however if it is a concern you need to configure your firewall
+      to reject ICMP timestamp requests. However, this does not have high impact on security in most cases.
+  - created: 2025-09-10T11:55:00Z
+    name: CVE-1999-0656
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2006-2932
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2007-2764
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-09-10T10:55:00Z
+    name: CVE-2007-4998
+    status: not_affected
+    justification: vulnerable_code_not_present
+    statusNotes: |
+      Talos Linux doesn't ship coreutils/busybox.
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2008-2544
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2008-4609
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2010-4563
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2014-8171
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2016-0774
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2016-3695
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2016-3699
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2017-6264
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2018-10840
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2018-10876
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2018-10882
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2018-10902
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2018-14625
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2018-6559
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2019-14899
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2019-3016
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2019-3819
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T20:34:39Z
+    name: CVE-2019-3887
+    status: fixed
+    statusNotes: |
+      CVE from long before Linux 6.12, considered fixed by the time of disclosure
+  - created: 2025-07-18T11:54:44Z
+    name: CVE-2017-1000377
+    status: not_affected
+    justification: vulnerable_code_not_present
+    statusNotes: |
+      This vulnerability concerns PAX Linux, a patch set that is not applied to Talos Linux.
+  - created: 2025-07-18T20:02:23Z
+    name: CVE-2017-1000255
+    status: not_affected
+    justification: vulnerable_code_not_present
+    statusNotes: |
+      Talos does not target PowerPC architecture, so the affected code is not being built.

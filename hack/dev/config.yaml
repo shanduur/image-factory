@@ -32,3 +32,10 @@ http:
 # authentication:
 #   enabled: true
 #   htpasswdPath: /etc/image-factory/htpasswd
+
+enterprise:
+  vex:
+    data:
+      namespace: siderolabs/image-factory
+      repository: test-vex-data
+    cacheTTL: 15s

@@ -207,7 +207,24 @@ func buildEnterprisePlugins(
 		return nil, fmt.Errorf("failed to initialize SPDX frontend: %w", err)
 	}
 
-	return []enterprise.FrontendPlugin{spdxFrontend}, nil
+	imageVerifyOptions, err := buildImageVerifyOptions(logger, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	vexFrontend, err := enterprise.NewVEXFrontend(logger, enterprise.VEXOptions{
+		Data:            opts.Enterprise.VEX.Data.String(),
+		DataInsecure:    opts.Enterprise.VEX.Data.Insecure,
+		CacheTTL:        opts.Enterprise.VEX.CacheTTL,
+		RefreshInterval: opts.Artifacts.RefreshInterval,
+		RemoteOptions:   remoteOptions(),
+		VerifyOptions:   imageVerifyOptions,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize VEX frontend: %w", err)
+	}
+
+	return []enterprise.FrontendPlugin{spdxFrontend, vexFrontend}, nil
 }
 
 func buildFrontendOptions(cacheImageSigner signer.Signer, authProvider enterprise.AuthProvider, opts Options) (frontendhttp.Options, error) {
@@ -342,7 +359,7 @@ func runMetricsServer(ctx context.Context, logger *zap.Logger, eg *errgroup.Grou
 	})
 }
 
-func buildArtifactsManager(logger *zap.Logger, opts Options) (*artifacts.Manager, error) {
+func buildImageVerifyOptions(logger *zap.Logger, opts Options) (artifacts.ImageVerifyOptions, error) {
 	var checkOpts []cosign.CheckOpts
 
 	if opts.ContainerSignature.Disabled {
@@ -351,7 +368,7 @@ func buildArtifactsManager(logger *zap.Logger, opts Options) (*artifacts.Manager
 		if len(strings.TrimSpace(opts.ContainerSignature.PublicKeyFile)) > 0 {
 			keyVerifier, err := getPublicKeyVerifier(opts)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get signature verifier for key %s: %w", opts.ContainerSignature.PublicKeyFile, err)
+				return artifacts.ImageVerifyOptions{}, fmt.Errorf("failed to get signature verifier for key %s: %w", opts.ContainerSignature.PublicKeyFile, err)
 			}
 
 			checkOpts = append(checkOpts, cosign.CheckOpts{
@@ -364,7 +381,7 @@ func buildArtifactsManager(logger *zap.Logger, opts Options) (*artifacts.Manager
 		if opts.ContainerSignature.SubjectRegExp != "" {
 			trustedRoot, err := cosign.TrustedRoot()
 			if err != nil {
-				return nil, fmt.Errorf("failed to get cosign trusted root: %w", err)
+				return artifacts.ImageVerifyOptions{}, fmt.Errorf("failed to get cosign trusted root: %w", err)
 			}
 
 			// Prefer opts.ContainerSignatureIssuerRegExp if set as this is more flexible
@@ -387,9 +404,16 @@ func buildArtifactsManager(logger *zap.Logger, opts Options) (*artifacts.Manager
 		}
 	}
 
-	imageVerifyOptions := artifacts.ImageVerifyOptions{
+	return artifacts.ImageVerifyOptions{
 		CheckOpts: checkOpts,
 		Disabled:  opts.ContainerSignature.Disabled,
+	}, nil
+}
+
+func buildArtifactsManager(logger *zap.Logger, opts Options) (*artifacts.Manager, error) {
+	imageVerifyOptions, err := buildImageVerifyOptions(logger, opts)
+	if err != nil {
+		return nil, err
 	}
 
 	minVersion, err := semver.Parse(opts.Build.MinTalosVersion)

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-22T20:13:43Z by kres 8299790.
+# Generated on 2026-05-05T13:49:12Z by kres 1762ab2.
 
 # common variables
 
@@ -21,15 +21,15 @@ USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
 PROTOBUF_GO_VERSION ?= 1.36.11
 GRPC_GO_VERSION ?= 1.6.1
-GRPC_GATEWAY_VERSION ?= 2.28.0
+GRPC_GATEWAY_VERSION ?= 2.29.0
 VTPROTOBUF_VERSION ?= 0.6.0
-GOIMPORTS_VERSION ?= 0.43.0
+GOIMPORTS_VERSION ?= 0.44.0
 GOMOCK_VERSION ?= 0.6.0
 DEEPCOPY_VERSION ?= v0.5.8
 GOLANGCILINT_VERSION ?= v2.11.4
 GOFUMPT_VERSION ?= v0.9.2
 GO_VERSION ?= 1.26.2
-DIS_VULNCHECK_VERSION ?= v0.0.0-20260408104044-a7a2dc044240
+DIS_VULNCHECK_VERSION ?= v0.0.0-20260409114749-05440f84fe69
 GO_BUILDFLAGS ?=
 GO_BUILDTAGS ?= ,
 GO_LDFLAGS ?=
@@ -101,6 +101,8 @@ GOOS ?= $(shell uname -s | tr "[:upper:]" "[:lower:]")
 TALOS_VERSION ?= 1.12.2
 K8S_VERSION ?= v1.35.0
 CHART_VERSION ?= 0.0.0-alpha.0
+GO_TOOLS_RELEASE ?= v0.3.1
+TALOS_VEX_DATA_IMAGE_REF ?= $(REGISTRY_AND_USERNAME)/image-factory/test-vex-data:latest
 
 # help menu
 
@@ -438,6 +440,21 @@ chart-version:
 	yq -i '.version = strenv(CHART_VERSION)' deploy/helm/image-factory/Chart.yaml
 	yq -i '.appVersion = strenv(TAG)' deploy/helm/image-factory/Chart.yaml
 	sed -i '/# -- Repository to use for Image Factory/{n; s|repository:.*|repository: '"$(REGISTRY)/$(USERNAME)/image-factory"'|}' deploy/helm/image-factory/values.yaml
+
+.PHONY: $(ARTIFACTS)/image-signer
+$(ARTIFACTS)/image-signer: $(ARTIFACTS)
+	@curl -sSL https://github.com/siderolabs/go-tools/releases/download/$(GO_TOOLS_RELEASE)/image-signer-$(OPERATING_SYSTEM)-$(GOARCH) -o $(ARTIFACTS)/image-signer
+	@chmod +x $(ARTIFACTS)/image-signer
+
+.PHONY: sign-images
+sign-images: $(ARTIFACTS)/image-signer
+	@$(ARTIFACTS)/image-signer sign --timeout=15m \
+	  $(TALOS_VEX_DATA_IMAGE_REF)@$$(crane digest $(TALOS_VEX_DATA_IMAGE_REF))
+
+.PHONY: push-talos-vex-data
+push-talos-vex-data:
+	@tar -C $(PWD)/internal/integration/testdata/vex-data -cvf $(PWD)/$(ARTIFACTS)/test-vulnerability-data.tar .
+	@crane append -f $(PWD)/$(ARTIFACTS)/test-vulnerability-data.tar -t $(TALOS_VEX_DATA_IMAGE_REF)
 
 .PHONY: rekres
 rekres:

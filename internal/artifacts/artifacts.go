@@ -11,7 +11,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 
-	"github.com/siderolabs/image-factory/internal/artifacts/internal/image"
+	"github.com/siderolabs/image-factory/internal/image/verify"
 )
 
 // Options are the options for the artifacts manager.
@@ -46,7 +46,7 @@ type Options struct { //nolint:govet
 }
 
 // ImageVerifyOptions are the options for verifying the image signature.
-type ImageVerifyOptions = image.VerifyOptions
+type ImageVerifyOptions = verify.VerifyOptions
 
 // Kind is the artifact kind.
 type Kind string

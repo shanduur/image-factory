@@ -17,6 +17,8 @@ import (
 	"github.com/siderolabs/image-factory/enterprise/spdx"
 	"github.com/siderolabs/image-factory/enterprise/spdx/builder"
 	"github.com/siderolabs/image-factory/enterprise/spdx/storage/registry"
+	"github.com/siderolabs/image-factory/enterprise/vex"
+	vexbuilder "github.com/siderolabs/image-factory/enterprise/vex/builder"
 )
 
 // Enabled indicates whether Enterprise features are enabled.
@@ -24,7 +26,24 @@ func Enabled() bool {
 	return true
 }
 
-// NewSpdxFrontend returns a new Spdx FrontendPlugin.
+// NewVEXFrontend returns a new VEX FrontendPlugin.
+func NewVEXFrontend(logger *zap.Logger, config VEXOptions) (FrontendPlugin, error) {
+	b, err := vexbuilder.NewBuilder(logger, vexbuilder.Options{
+		Registry:        config.Data,
+		Insecure:        config.DataInsecure,
+		RefreshInterval: config.RefreshInterval,
+		RemoteOptions:   config.RemoteOptions,
+		VerifyOptions:   config.VerifyOptions,
+		CacheTTL:        config.CacheTTL,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating VEX builder: %w", err)
+	}
+
+	return vex.NewFrontend(b), nil
+}
+
+// NewSpdxFrontend returns a new SPDX FrontendPlugin.
 func NewSpdxFrontend(logger *zap.Logger, opts SPDXOptions) (FrontendPlugin, error) {
 	var repoOpts []name.Option
 

@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/siderolabs/image-factory/internal/artifacts/internal/image"
+	"github.com/siderolabs/image-factory/internal/image/verify"
 )
 
 type imageHandler func(ctx context.Context, logger *zap.Logger, img v1.Image) error
@@ -122,7 +122,7 @@ func (m *Manager) fetchImageByDigest(digestRef name.Digest, architecture Arch, i
 		nameOptions = append(nameOptions, name.Insecure)
 	}
 
-	verifyResult, err := image.VerifySignatures(ctx, digestRef, m.options.ImageVerifyOptions, nameOptions...)
+	verifyResult, err := verify.VerifySignatures(ctx, digestRef, m.options.ImageVerifyOptions, nameOptions...)
 	if err != nil {
 		return fmt.Errorf("failed to verify image signature for %s: %w", digestRef.Name(), err)
 	}

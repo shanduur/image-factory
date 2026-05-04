@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Package image provides utilities for working with container image signatures.
-package image
+// Package verify provides utilities for verifying container image signatures.
+package verify
 
 import "github.com/sigstore/cosign/v3/pkg/cosign"
 
