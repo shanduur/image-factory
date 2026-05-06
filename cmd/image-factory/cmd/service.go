@@ -106,7 +106,7 @@ func RunFactory(ctx context.Context, logger *zap.Logger, opts Options) error {
 		eg.Go(func() error { return authProvider.Run(ctx) })
 	}
 
-	enterprisePlugins, err := buildEnterprisePlugins(logger, configFactory, artifactsManager, assetBuilder, cacheImageSigner, authProvider, opts)
+	enterprisePlugins, err := buildEnterprisePlugins(ctx, eg, logger, configFactory, artifactsManager, assetBuilder, cacheImageSigner, authProvider, opts)
 	if err != nil {
 		return err
 	}
@@ -179,6 +179,8 @@ func buildAuthProvider(logger *zap.Logger, opts Options) (enterprise.AuthProvide
 }
 
 func buildEnterprisePlugins(
+	ctx context.Context,
+	eg *errgroup.Group,
 	logger *zap.Logger,
 	configFactory *schematic.Factory,
 	artifactsManager *artifacts.Manager,
@@ -191,7 +193,7 @@ func buildEnterprisePlugins(
 		return nil, nil //nolint:nilnil
 	}
 
-	spdxFrontend, err := enterprise.NewSpdxFrontend(logger, enterprise.SPDXOptions{
+	spdxFrontend, spdxSource, err := enterprise.NewSpdxFrontend(logger, enterprise.SPDXOptions{
 		ExternalURL:             opts.HTTP.ExternalURL,
 		SchematicFactory:        configFactory,
 		ArtifactsManager:        artifactsManager,
@@ -212,19 +214,35 @@ func buildEnterprisePlugins(
 		return nil, err
 	}
 
-	vexFrontend, err := enterprise.NewVEXFrontend(logger, enterprise.VEXOptions{
-		Data:            opts.Enterprise.VEX.Data.String(),
-		DataInsecure:    opts.Enterprise.VEX.Data.Insecure,
-		CacheTTL:        opts.Enterprise.VEX.CacheTTL,
-		RefreshInterval: opts.Artifacts.RefreshInterval,
-		RemoteOptions:   remoteOptions(),
-		VerifyOptions:   imageVerifyOptions,
+	vexFrontend, vexSource, err := enterprise.NewVEXFrontend(ctx, eg, logger, enterprise.VEXOptions{
+		Data:             opts.Enterprise.VEX.Data.String(),
+		DataInsecure:     opts.Enterprise.VEX.Data.Insecure,
+		MetricsNamespace: opts.Metrics.Namespace,
+		CacheTTL:         opts.Enterprise.VEX.Cache.TTL,
+		CacheCapacity:    opts.Enterprise.VEX.Cache.Capacity,
+		RefreshInterval:  opts.Artifacts.RefreshInterval,
+		RemoteOptions:    remoteOptions(),
+		VerifyOptions:    imageVerifyOptions,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize VEX frontend: %w", err)
 	}
 
-	return []enterprise.FrontendPlugin{spdxFrontend, vexFrontend}, nil
+	scannerFrontend, err := enterprise.NewScannerFrontend(ctx, eg, logger, enterprise.ScannerOptions{
+		VEXSource:        vexSource,
+		SPDXSource:       spdxSource,
+		SchematicFactory: configFactory,
+		AuthProvider:     authProvider,
+		DatabaseURL:      opts.Enterprise.Scanner.DatabaseURL,
+		MetricsNamespace: opts.Metrics.Namespace,
+		CacheTTL:         opts.Enterprise.Scanner.Cache.TTL,
+		CacheCapacity:    opts.Enterprise.Scanner.Cache.Capacity,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize scanner frontend: %w", err)
+	}
+
+	return []enterprise.FrontendPlugin{spdxFrontend, vexFrontend, scannerFrontend}, nil
 }
 
 func buildFrontendOptions(cacheImageSigner signer.Signer, authProvider enterprise.AuthProvider, opts Options) (frontendhttp.Options, error) {

@@ -14,16 +14,16 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"sync"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/siderolabs/go-vex/pkg/types/v1alpha1"
 	"github.com/siderolabs/go-vex/pkg/vexgen"
 	"go.uber.org/zap"
-	"golang.org/x/sync/singleflight"
 
+	"github.com/siderolabs/image-factory/internal/cache"
 	"github.com/siderolabs/image-factory/internal/image/verify"
 	"github.com/siderolabs/image-factory/internal/remotewrap"
 )
@@ -37,31 +37,26 @@ const DefaultDataTag = "latest"
 // Builder produces VEX documents for a Talos version, with TTL caching and singleflight.
 type Builder struct {
 	puller        remotewrap.Puller
-	sf            singleflight.Group
 	logger        *zap.Logger
-	cache         map[string]cachedDoc
+	c             *cache.Cache[string, []byte]
 	registry      string
 	dataTag       string
 	verifyOptions verify.VerifyOptions
 	cacheTTL      time.Duration
-	mu            sync.RWMutex
 	insecure      bool
 }
 
 // Options configures Builder.
 type Options struct {
-	Registry        string
-	DataTag         string
-	RemoteOptions   []remote.Option
-	VerifyOptions   verify.VerifyOptions
-	RefreshInterval time.Duration
-	CacheTTL        time.Duration
-	Insecure        bool
-}
-
-type cachedDoc struct {
-	expiresAt time.Time
-	data      []byte
+	Registry         string
+	DataTag          string
+	MetricsNamespace string
+	RemoteOptions    []remote.Option
+	VerifyOptions    verify.VerifyOptions
+	RefreshInterval  time.Duration
+	CacheTTL         time.Duration
+	Capacity         uint64
+	Insecure         bool
 }
 
 // NewBuilder constructs a Builder.
@@ -83,9 +78,24 @@ func NewBuilder(logger *zap.Logger, opts Options) (*Builder, error) {
 		insecure:      opts.Insecure,
 		verifyOptions: opts.VerifyOptions,
 		cacheTTL:      opts.CacheTTL,
-		cache:         make(map[string]cachedDoc),
-		logger:        logger.With(zap.String("component", "vex-builder")),
+		c: cache.New[string, []byte](cache.Options{
+			MetricsNamespace: opts.MetricsNamespace,
+			MetricsName:      "image_factory_vex_cache_size",
+			MetricsHelp:      "Number of VEX documents in in-memory cache.",
+			Capacity:         opts.Capacity,
+		}),
+		logger: logger.With(zap.String("component", "vex-builder")),
 	}, nil
+}
+
+// Start runs the cache eviction goroutine; should be invoked in a goroutine.
+func (b *Builder) Start() error {
+	return b.c.Start()
+}
+
+// Stop halts the cache eviction goroutine.
+func (b *Builder) Stop() {
+	b.c.Stop()
 }
 
 // Build returns a serialized VEX JSON document for the given Talos version tag.
@@ -94,11 +104,11 @@ func NewBuilder(logger *zap.Logger, opts Options) (*Builder, error) {
 // via singleflight. The fetch runs under a detached context so request cancellations
 // don't poison the shared work.
 func (b *Builder) Build(ctx context.Context, versionTag string) ([]byte, error) {
-	if data, ok := b.getCached(versionTag); ok {
-		return data, nil
+	if item := b.c.TTL.Get(versionTag); item != nil && !item.IsExpired() {
+		return item.Value(), nil
 	}
 
-	resultCh := b.sf.DoChan(versionTag, func() (any, error) { //nolint:contextcheck
+	resultCh := b.c.SF.DoChan(versionTag, func() (any, error) { //nolint:contextcheck
 		return b.buildAndCache(versionTag)
 	})
 
@@ -116,32 +126,6 @@ func (b *Builder) Build(ctx context.Context, versionTag string) ([]byte, error) 
 		}
 
 		return data, nil
-	}
-}
-
-func (b *Builder) getCached(versionTag string) ([]byte, bool) {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-
-	item, ok := b.cache[versionTag]
-	if !ok {
-		return nil, false
-	}
-
-	if time.Now().After(item.expiresAt) {
-		return nil, false
-	}
-
-	return item.data, true
-}
-
-func (b *Builder) setCached(versionTag string, data []byte) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
-	b.cache[versionTag] = cachedDoc{
-		data:      data,
-		expiresAt: time.Now().Add(b.cacheTTL),
 	}
 }
 
@@ -168,10 +152,22 @@ func (b *Builder) buildAndCache(versionTag string) ([]byte, error) {
 	}
 
 	data := buf.Bytes()
-	b.setCached(versionTag, data)
+	b.c.TTL.Set(versionTag, data, b.cacheTTL)
 
 	return data, nil
 }
+
+// Describe implements prom.Collector interface.
+func (b *Builder) Describe(ch chan<- *prometheus.Desc) {
+	b.c.Describe(ch)
+}
+
+// Collect implements prom.Collector interface.
+func (b *Builder) Collect(ch chan<- prometheus.Metric) {
+	b.c.Collect(ch)
+}
+
+var _ prometheus.Collector = (*Builder)(nil)
 
 // fetchExploitabilityData heads the configured OCI tag, verifies the signature on the resolved digest,
 // pulls the image, and extracts the first regular file from the first layer.

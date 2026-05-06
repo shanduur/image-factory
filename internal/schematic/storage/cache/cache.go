@@ -12,10 +12,9 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/siderolabs/gen/optional"
-	"github.com/siderolabs/gen/panicsafe"
 	"github.com/siderolabs/gen/xerrors"
-	"golang.org/x/sync/singleflight"
 
+	commoncache "github.com/siderolabs/image-factory/internal/cache"
 	"github.com/siderolabs/image-factory/internal/schematic/storage"
 )
 
@@ -28,12 +27,8 @@ type Options struct {
 
 // Storage is a schematic storage in-memory cache.
 type Storage struct {
-	c          *ttlcache.Cache[string, optional.Optional[[]byte]]
+	c          *commoncache.Cache[string, optional.Optional[[]byte]]
 	underlying storage.Storage
-
-	metricCacheSize prometheus.Gauge
-
-	g singleflight.Group
 
 	negativeTTL time.Duration
 }
@@ -43,21 +38,18 @@ func NewCache(underlying storage.Storage, options Options) *Storage {
 	return &Storage{
 		underlying:  underlying,
 		negativeTTL: options.NegativeTTL,
-		c: ttlcache.New[string, optional.Optional[[]byte]](
-			ttlcache.WithDisableTouchOnHit[string, optional.Optional[[]byte]](),
-			ttlcache.WithCapacity[string, optional.Optional[[]byte]](options.CacheCapacity),
-		),
-		metricCacheSize: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name:      "image_factory_schematic_cache_size",
-			Help:      "Number of schematics in in-memory cache.",
-			Namespace: options.MetricsNamespace,
+		c: commoncache.New[string, optional.Optional[[]byte]](commoncache.Options{
+			MetricsNamespace: options.MetricsNamespace,
+			MetricsName:      "image_factory_schematic_cache_size",
+			MetricsHelp:      "Number of schematics in in-memory cache.",
+			Capacity:         options.CacheCapacity,
 		}),
 	}
 }
 
 // Start the cache invalidation, should be run in a goroutine.
 func (s *Storage) Start() error {
-	return panicsafe.Run(s.c.Start)
+	return s.c.Start()
 }
 
 // Stop the cache invalidation background goroutine.
@@ -71,7 +63,7 @@ var _ storage.Storage = (*Storage)(nil)
 // Head checks if the schematic exists.
 func (s *Storage) Head(ctx context.Context, id string) error {
 	// check cache
-	item := s.c.Get(id)
+	item := s.c.TTL.Get(id)
 
 	// cache entry is there, return immediate response
 	if item != nil && !item.IsExpired() {
@@ -91,7 +83,7 @@ func (s *Storage) Head(ctx context.Context, id string) error {
 // Get returns the schematic.
 func (s *Storage) Get(ctx context.Context, id string) ([]byte, error) {
 	// check cache
-	item := s.c.Get(id)
+	item := s.c.TTL.Get(id)
 
 	// cache entry is there, return immediate response
 	if item != nil && !item.IsExpired() {
@@ -102,12 +94,12 @@ func (s *Storage) Get(ctx context.Context, id string) ([]byte, error) {
 		return nil, xerrors.NewTaggedf[storage.ErrNotFoundTag]("schematic ID %q not found", id)
 	}
 
-	ch := s.g.DoChan(id, func() (any, error) {
+	ch := s.c.SF.DoChan(id, func() (any, error) {
 		data, err := s.underlying.Get(ctx, id)
 		if err != nil {
 			if xerrors.TagIs[storage.ErrNotFoundTag](err) {
 				// never overwrite a present value, as Put might have been called
-				s.c.GetOrSet(id, optional.None[[]byte](),
+				s.c.TTL.GetOrSet(id, optional.None[[]byte](),
 					ttlcache.WithTTL[string, optional.Optional[[]byte]](s.negativeTTL),
 				)
 			}
@@ -116,7 +108,7 @@ func (s *Storage) Get(ctx context.Context, id string) ([]byte, error) {
 		}
 
 		// never overwrite a present value, as Put might have been called
-		item, _ := s.c.GetOrSet(id, optional.Some(data))
+		item, _ := s.c.TTL.GetOrSet(id, optional.Some(data))
 
 		return item.Value().ValueOr(data), nil
 	})
@@ -140,21 +132,19 @@ func (s *Storage) Put(ctx context.Context, id string, data []byte) error {
 		return err
 	}
 
-	s.c.Set(id, optional.Some(data), -1) // never expire, schematics are immutable
+	s.c.TTL.Set(id, optional.Some(data), -1) // never expire, schematics are immutable
 
 	return nil
 }
 
 // Describe implements prom.Collector interface.
 func (s *Storage) Describe(ch chan<- *prometheus.Desc) {
-	prometheus.DescribeByCollect(s, ch)
+	s.c.Describe(ch)
 }
 
 // Collect implements prom.Collector interface.
 func (s *Storage) Collect(ch chan<- prometheus.Metric) {
-	s.metricCacheSize.Set(float64(s.c.Len()))
-
-	s.metricCacheSize.Collect(ch)
+	s.c.Collect(ch)
 }
 
 var _ prometheus.Collector = &Storage{}

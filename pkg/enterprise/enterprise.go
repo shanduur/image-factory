@@ -28,6 +28,15 @@ type FrontendPlugin interface {
 	Handle(context.Context, http.ResponseWriter, *http.Request, httprouter.Params) error
 }
 
+// ReadinessChecker is implemented by FrontendPlugin instances whose readiness
+// must factor into the /readyz response. Plugins that do not implement this
+// interface are considered always ready.
+type ReadinessChecker interface {
+	// Ready reports nil when the plugin is ready to serve requests, or a
+	// non-nil error describing why it is not.
+	Ready() error
+}
+
 // SPDXOptions holds configuration options for the SPDX frontend.
 type SPDXOptions struct {
 	ExternalURL             string
@@ -44,17 +53,44 @@ type SPDXOptions struct {
 
 // VEXOptions holds configuration options for the VEX frontend.
 type VEXOptions struct {
-	Data            string
-	RemoteOptions   []remote.Option
-	VerifyOptions   verify.VerifyOptions
-	RefreshInterval time.Duration
-	CacheTTL        time.Duration
-	DataInsecure    bool
+	Data             string
+	MetricsNamespace string
+	RemoteOptions    []remote.Option
+	VerifyOptions    verify.VerifyOptions
+	RefreshInterval  time.Duration
+	CacheTTL         time.Duration
+	CacheCapacity    uint64
+	DataInsecure     bool
 }
 
-// ErrNotEnabledTag tags errors that occur when an enterprise feature is
-// requested but the enterprise build tag is not active.
-type ErrNotEnabledTag struct{}
+// VEXSource produces a VEX JSON document for a given Talos version tag.
+//
+// The VEX builder satisfies this interface and is reused by the scanner frontend
+// to suppress vulnerabilities classified as "fixed"/"not_affected" upstream.
+type VEXSource interface {
+	Build(ctx context.Context, versionTag string) ([]byte, error)
+}
+
+// SPDXSource produces a merged SPDX JSON document for the requested schematic,
+// Talos version and architecture, applying ownership enforcement.
+//
+// The SPDX builder satisfies this interface and is reused by the scanner frontend
+// so the SBOM extraction and access control live in one place.
+type SPDXSource interface {
+	Build(ctx context.Context, schematicID, versionTag string, arch artifacts.Arch) (io.ReadCloser, error)
+}
+
+// ScannerOptions holds configuration options for the Scanner frontend.
+type ScannerOptions struct {
+	VEXSource        VEXSource
+	SPDXSource       SPDXSource
+	SchematicFactory *schematic.Factory
+	AuthProvider     AuthProvider
+	DatabaseURL      string
+	MetricsNamespace string
+	CacheTTL         time.Duration
+	CacheCapacity    uint64
+}
 
 // Checksummer computes a checksum for a boot asset and writes the result to
 // the HTTP response.  The implementation lives behind the enterprise build tag;

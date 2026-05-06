@@ -52,9 +52,6 @@ func runWithContext(ctx context.Context) error {
 		return err
 	}
 
-	log.Print(logLevel.String())
-	log.Print(config)
-
 	opts, err := initConfig()
 	if err != nil {
 		return fmt.Errorf("failed to initialize config: %w", err)

@@ -20,7 +20,7 @@ import (
 	"github.com/siderolabs/gen/xerrors"
 
 	"github.com/siderolabs/image-factory/enterprise/vex/builder"
-	"github.com/siderolabs/image-factory/internal/profile"
+	enterrors "github.com/siderolabs/image-factory/pkg/enterprise/errors"
 )
 
 const vexJSONMediaType = "application/json"
@@ -64,11 +64,11 @@ func (f *Frontend) Handle(ctx context.Context, w http.ResponseWriter, r *http.Re
 	// Validate version format
 	talosVersion, err := semver.Parse(versionTag[1:])
 	if err != nil {
-		return xerrors.NewTaggedf[profile.InvalidErrorTag]("invalid version format: %q", versionTag)
+		return xerrors.NewTaggedf[enterrors.InvalidErrorTag]("invalid version format: %q", versionTag)
 	}
 
 	if talosVersion.LT(availableFrom) {
-		return xerrors.NewTaggedf[profile.InvalidErrorTag]("VEX documents are only available for Talos versions %s and later", availableFrom)
+		return xerrors.NewTaggedf[enterrors.InvalidErrorTag]("VEX documents are only available for Talos versions %s and later", availableFrom)
 	}
 
 	data, err := f.builder.Build(ctx, versionTag)

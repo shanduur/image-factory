@@ -715,6 +715,7 @@ func (f *Frontend) wizardFinal(ctx context.Context, params WizardParams) (string
 			TalosctlBaseURL          *url.URL
 			SPDXBaseURL              *url.URL
 			VEXBaseURL               *url.URL
+			ScanBaseURL              *url.URL
 			ChecksumBaseURL          *url.URL
 			InstallerImage           string
 			SecureBootInstallerImage string
@@ -751,6 +752,7 @@ func (f *Frontend) wizardFinal(ctx context.Context, params WizardParams) (string
 			Enterprise:      enterprise.Enabled(),
 			SPDXBaseURL:     f.options.ExternalURL.JoinPath("spdx", schematicID, version, params.Arch),
 			VEXBaseURL:      f.options.ExternalURL.JoinPath("vex", version, "vex.json"),
+			ScanBaseURL:     f.options.ExternalURL.JoinPath("scans", schematicID, version, params.Arch),
 			ChecksumBaseURL: f.options.ExternalURL.JoinPath("image", schematicID, version),
 		},
 		urlValues,

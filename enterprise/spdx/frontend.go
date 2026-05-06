@@ -22,8 +22,8 @@ import (
 
 	"github.com/siderolabs/image-factory/enterprise/spdx/builder"
 	"github.com/siderolabs/image-factory/internal/artifacts"
-	"github.com/siderolabs/image-factory/internal/profile"
 	"github.com/siderolabs/image-factory/internal/schematic"
+	enterrors "github.com/siderolabs/image-factory/pkg/enterprise/errors"
 )
 
 // AuthProvider is a subset of enterprise.AuthProvider used for ownership checks.
@@ -90,17 +90,17 @@ func (f *Frontend) Handle(ctx context.Context, w http.ResponseWriter, r *http.Re
 	// Validate version format
 	talosVersion, err := semver.Parse(versionTag[1:])
 	if err != nil {
-		return xerrors.NewTaggedf[profile.InvalidErrorTag]("invalid version format: %q", versionTag)
+		return xerrors.NewTaggedf[enterrors.InvalidErrorTag]("invalid version format: %q", versionTag)
 	}
 
 	if talosVersion.LT(availableFrom) {
-		return xerrors.NewTaggedf[profile.InvalidErrorTag]("SPDX bundles are only available for Talos versions %s and later", availableFrom)
+		return xerrors.NewTaggedf[enterrors.InvalidErrorTag]("SPDX bundles are only available for Talos versions %s and later", availableFrom)
 	}
 
 	// Validate architecture
 	arch := p.ByName("arch")
 	if !artifacts.ValidArch(arch) {
-		return xerrors.NewTaggedf[profile.InvalidErrorTag]("invalid architecture: %q", arch)
+		return xerrors.NewTaggedf[enterrors.InvalidErrorTag]("invalid architecture: %q", arch)
 	}
 
 	// Build/retrieve SPDX bundle

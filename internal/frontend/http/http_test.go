@@ -21,7 +21,7 @@ import (
 	"github.com/siderolabs/image-factory/internal/frontend/http"
 	"github.com/siderolabs/image-factory/internal/profile"
 	"github.com/siderolabs/image-factory/internal/schematic/storage"
-	"github.com/siderolabs/image-factory/pkg/enterprise"
+	enterrors "github.com/siderolabs/image-factory/pkg/enterprise/errors"
 	schematicpkg "github.com/siderolabs/image-factory/pkg/schematic"
 )
 
@@ -47,7 +47,7 @@ func TestMatchError(t *testing.T) {
 		},
 		{
 			name:           "enterprise not enabled",
-			err:            xerrors.NewTagged[enterprise.ErrNotEnabledTag](errors.New("not enabled")),
+			err:            xerrors.NewTagged[enterrors.NotEnabledTag](errors.New("not enabled")),
 			expectedLevel:  zap.WarnLevel,
 			expectedStatus: nethttp.StatusPaymentRequired,
 			expectCallback: true,
@@ -95,7 +95,7 @@ func TestMatchError(t *testing.T) {
 		{
 			name: "wrapped enterprise not enabled",
 			err: fmt.Errorf("wrap: %w",
-				xerrors.NewTagged[enterprise.ErrNotEnabledTag](errors.New("not enabled")),
+				xerrors.NewTagged[enterrors.NotEnabledTag](errors.New("not enabled")),
 			),
 			expectedLevel:  zap.WarnLevel,
 			expectedStatus: nethttp.StatusPaymentRequired,

@@ -38,6 +38,7 @@ import (
 	"github.com/siderolabs/image-factory/internal/secureboot"
 	"github.com/siderolabs/image-factory/internal/version"
 	"github.com/siderolabs/image-factory/pkg/enterprise"
+	enterrors "github.com/siderolabs/image-factory/pkg/enterprise/errors"
 	schematicpkg "github.com/siderolabs/image-factory/pkg/schematic"
 )
 
@@ -53,6 +54,7 @@ type Frontend struct {
 	puller            remotewrap.Puller
 	pusher            remotewrap.Pusher
 	imageSigner       signer.Signer
+	readinessCheckers []enterprise.ReadinessChecker
 	sf                singleflight.Group
 	options           Options
 }
@@ -95,6 +97,12 @@ func NewFrontend(
 		checksummer:       checksummer,
 		logger:            logger.With(zap.String("frontend", "http")),
 		options:           opts,
+	}
+
+	for _, p := range enterprisePlugins {
+		if rc, ok := p.(enterprise.ReadinessChecker); ok {
+			frontend.readinessCheckers = append(frontend.readinessCheckers, rc)
+		}
 	}
 
 	var err error
@@ -145,9 +153,11 @@ func NewFrontend(
 		}
 	}
 
-	// /healthz is always public (Kubernetes probes, monitoring)
+	// /healthz and /readyz are always public (Kubernetes probes, monitoring)
 	registerPublicRoute(frontend.router.GET, "/healthz", frontend.handleHealth)
 	registerPublicRoute(frontend.router.HEAD, "/healthz", frontend.handleHealth)
+	registerPublicRoute(frontend.router.GET, "/readyz", frontend.handleReady)
+	registerPublicRoute(frontend.router.HEAD, "/readyz", frontend.handleReady)
 
 	// images - require auth
 	registerRoute(frontend.router.GET, "/image/:schematic/:version/:path", frontend.handleImage)
@@ -263,11 +273,16 @@ func MatchError(err error, callback func(message string, code int)) (zapcore.Lev
 	switch {
 	case err == nil:
 		// happy case
-	case xerrors.TagIs[enterprise.ErrNotEnabledTag](err):
+	case xerrors.TagIs[enterrors.NotEnabledTag](err):
 		level = zap.WarnLevel
 		status = http.StatusPaymentRequired
 
 		callback(err.Error(), http.StatusPaymentRequired)
+	case xerrors.TagIs[enterrors.NotReadyTag](err):
+		level = zap.WarnLevel
+		status = http.StatusServiceUnavailable
+
+		callback("service temporarily unavailable", http.StatusServiceUnavailable)
 	case xerrors.TagIs[storage.ErrNotFoundTag](err),
 		xerrors.TagIs[artifacts.ErrNotFoundTag](err):
 		level = zap.WarnLevel
@@ -276,6 +291,7 @@ func MatchError(err error, callback func(message string, code int)) (zapcore.Lev
 		callback(err.Error(), http.StatusNotFound)
 	case xerrors.TagIs[profile.InvalidErrorTag](err),
 		xerrors.TagIs[schematicpkg.InvalidErrorTag](err),
+		xerrors.TagIs[enterrors.InvalidErrorTag](err),
 		xerrors.TagIs[InvalidImageTag](err):
 		level = zap.WarnLevel
 		status = http.StatusBadRequest
@@ -319,4 +335,21 @@ func (f *Frontend) getLocalizer(r *http.Request) *i18n.Localizer {
 	}
 
 	return i18n.NewLocalizer(getLocalizerBundle(), lang, "en")
+}
+
+// handleReady reports readiness once all enterprise plugins implementing
+// ReadinessChecker report ready. Used by orchestration probes to gate traffic
+// (e.g. async Grype DB warm-up).
+func (f *Frontend) handleReady(_ context.Context, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) error {
+	for _, rc := range f.readinessCheckers {
+		if err := rc.Ready(); err != nil {
+			http.Error(w, "not ready", http.StatusServiceUnavailable)
+
+			return nil //nolint:nilerr
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	return nil
 }

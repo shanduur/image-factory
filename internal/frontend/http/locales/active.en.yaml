@@ -307,6 +307,21 @@
 - id: final.extra.checksum_enterprise_feature
   translation: "Checksums are only available through the Talos Linux Enterprise Image Factory."
 
+- id: final.scan.title
+  translation: "Vulnerability Scan"
+
+- id: final.scan.loading
+  translation: "Running vulnerability scan…"
+
+- id: final.scan.download
+  translation: "Download report:"
+
+- id: final.scan.error
+  translation: "Failed to load scan report"
+
+- id: final.scan.enterprise_feature
+  translation: "Vulnerability scan reports are only available through the Talos Linux Image Factory Enterprise."
+
 - id: final.disk_image.secure_boot
   translation: "SecureBoot Disk Image"
 

@@ -307,6 +307,21 @@
 - id: final.extra.checksum_enterprise_feature
   translation: "Les sommes de contrôle sont uniquement disponibles via la Talos Linux Enterprise Image Factory."
 
+- id: final.scan.title
+  translation: "Analyse des vulnérabilités"
+
+- id: final.scan.loading
+  translation: "Analyse des vulnérabilités en cours…"
+
+- id: final.scan.download
+  translation: "Télécharger le rapport :"
+
+- id: final.scan.error
+  translation: "Échec du chargement du rapport d'analyse"
+
+- id: final.scan.enterprise_feature
+  translation: "Les rapports d'analyse de vulnérabilités sont uniquement disponibles via la Talos Linux Image Factory Enterprise."
+
 - id: final.disk_image.secure_boot
   translation: "Image disque SecureBoot"
 

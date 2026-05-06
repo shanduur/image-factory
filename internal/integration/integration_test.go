@@ -388,6 +388,12 @@ func commonTest(t *testing.T, options cmd.Options) {
 
 		testVEXFrontend(ctx, t, baseURL)
 	})
+
+	t.Run("TestScanFrontend", func(t *testing.T) {
+		t.Parallel()
+
+		testScanFrontend(ctx, t, baseURL)
+	})
 }
 
 type ociRepositoryFalg struct {

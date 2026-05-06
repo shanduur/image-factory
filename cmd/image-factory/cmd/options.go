@@ -422,6 +422,9 @@ type AuthenticationOptions struct { //nolint:govet // keeping order for semantic
 
 // EnterpriseOptions contains configuration for enterprise-specific features.
 type EnterpriseOptions struct {
+	// Scanner contains configuration for the vulnerability scanner.
+	Scanner ScannerOptions `koanf:"scanner"`
+
 	// VEX contains configuration for VEX data fetching.
 	VEX VEXOptions `koanf:"vex"`
 }
@@ -431,8 +434,27 @@ type VEXOptions struct {
 	// Data specifies the OCI repository where VEX documents are stored.
 	Data OCIRepositoryOptions `koanf:"data"`
 
-	// CacheTTL is the duration for caching generated VEX documents.
-	CacheTTL time.Duration `koanf:"cacheTTL"`
+	// Cache contains configuration for caching VEX documents.
+	Cache LRUCacheOptions `koanf:"cache"`
+}
+
+// ScannerOptions configures the vulnerability scanner endpoint.
+type ScannerOptions struct {
+	// DatabaseURL overrides the Grype vulnerability database listing URL.
+	// Set this to point at a mirror or air-gapped database service.
+	DatabaseURL string `koanf:"databaseURL"`
+
+	// Cache contains configuration for caching vulnerability scan results.
+	Cache LRUCacheOptions `koanf:"cache"`
+}
+
+// LRUCacheOptions configures caching of vulnerability scan results.
+type LRUCacheOptions struct {
+	// TTL is the duration for caching objects.
+	TTL time.Duration `koanf:"ttl"`
+
+	// Capacity caps the number of cached objects before LRU eviction.
+	Capacity uint64 `koanf:"capacity"`
 }
 
 // DefaultOptions are the default options.
@@ -512,7 +534,17 @@ var DefaultOptions = Options{
 				Namespace:  "siderolabs/talos-vex",
 				Repository: "talos-vex-data",
 			},
-			CacheTTL: 15 * time.Minute,
+			Cache: LRUCacheOptions{
+				TTL:      15 * time.Minute,
+				Capacity: 65536,
+			},
+		},
+		Scanner: ScannerOptions{
+			DatabaseURL: "https://grype.anchore.io/databases",
+			Cache: LRUCacheOptions{
+				TTL:      15 * time.Minute,
+				Capacity: 4096,
+			},
 		},
 	},
 }

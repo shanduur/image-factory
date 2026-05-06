@@ -843,6 +843,46 @@ Enterprise contains configuration for enterprise-specific features.
 
 ---
 
+### `enterprise.scanner`
+
+Scanner contains configuration for the vulnerability scanner.
+
+---
+
+### `enterprise.scanner.databaseURL`
+
+- **Type:** `string`
+- **Env:** `ENTERPRISE_SCANNER_DATABASEURL`
+
+DatabaseURL overrides the Grype vulnerability database listing URL.
+Set this to point at a mirror or air-gapped database service.
+
+---
+
+### `enterprise.scanner.cache`
+
+Cache contains configuration for caching vulnerability scan results.
+
+---
+
+### `enterprise.scanner.cache.ttl`
+
+- **Type:** `time.Duration`
+- **Env:** `ENTERPRISE_SCANNER_CACHE_TTL`
+
+TTL is the duration for caching objects.
+
+---
+
+### `enterprise.scanner.cache.capacity`
+
+- **Type:** `uint64`
+- **Env:** `ENTERPRISE_SCANNER_CACHE_CAPACITY`
+
+Capacity caps the number of cached objects before LRU eviction.
+
+---
+
 ### `enterprise.vex`
 
 VEX contains configuration for VEX data fetching.
@@ -894,12 +934,27 @@ Insecure allows connections to registries over HTTP or with invalid TLS certific
 
 ---
 
-### `enterprise.vex.cacheTTL`
+### `enterprise.vex.cache`
+
+Cache contains configuration for caching VEX documents.
+
+---
+
+### `enterprise.vex.cache.ttl`
 
 - **Type:** `time.Duration`
-- **Env:** `ENTERPRISE_VEX_CACHETTL`
+- **Env:** `ENTERPRISE_VEX_CACHE_TTL`
 
-CacheTTL is the duration for caching generated VEX documents.
+TTL is the duration for caching objects.
+
+---
+
+### `enterprise.vex.cache.capacity`
+
+- **Type:** `uint64`
+- **Env:** `ENTERPRISE_VEX_CACHE_CAPACITY`
+
+Capacity caps the number of cached objects before LRU eviction.
 
 ---
 
@@ -977,8 +1032,15 @@ containerSignature:
     publicKeyHashAlgo: sha256
     subjectRegExp: (@siderolabs\.com$|^releasemgr-svc@talos-production\.iam\.gserviceaccount\.com$)
 enterprise:
+    scanner:
+        cache:
+            capacity: 4096
+            ttl: 15m0s
+        databaseURL: https://grype.anchore.io/databases
     vex:
-        cacheTTL: 15m0s
+        cache:
+            capacity: 65536
+            ttl: 15m0s
         data:
             insecure: false
             namespace: siderolabs/talos-vex
@@ -1067,7 +1129,11 @@ IF_CONTAINERSIGNATURE_ISSUERREGEXP=
 IF_CONTAINERSIGNATURE_PUBLICKEYFILE=
 IF_CONTAINERSIGNATURE_PUBLICKEYHASHALGO=sha256
 IF_CONTAINERSIGNATURE_SUBJECTREGEXP=(@siderolabs\.com$|^releasemgr-svc@talos-production\.iam\.gserviceaccount\.com$)
-IF_ENTERPRISE_VEX_CACHETTL=15m0s
+IF_ENTERPRISE_SCANNER_CACHE_CAPACITY=4096
+IF_ENTERPRISE_SCANNER_CACHE_TTL=15m0s
+IF_ENTERPRISE_SCANNER_DATABASEURL=https://grype.anchore.io/databases
+IF_ENTERPRISE_VEX_CACHE_CAPACITY=65536
+IF_ENTERPRISE_VEX_CACHE_TTL=15m0s
 IF_ENTERPRISE_VEX_DATA_INSECURE=false
 IF_ENTERPRISE_VEX_DATA_NAMESPACE=siderolabs/talos-vex
 IF_ENTERPRISE_VEX_DATA_REGISTRY=ghcr.io

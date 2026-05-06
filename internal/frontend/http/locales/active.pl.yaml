@@ -307,6 +307,21 @@
 - id: final.extra.checksum_enterprise_feature
   translation: "Sumy kontrolne są dostępne wyłącznie za pośrednictwem Talos Linux Enterprise Image Factory."
 
+- id: final.scan.title
+  translation: "Skan podatności"
+
+- id: final.scan.loading
+  translation: "Trwa skanowanie podatności…"
+
+- id: final.scan.download
+  translation: "Pobierz raport:"
+
+- id: final.scan.error
+  translation: "Nie udało się pobrać raportu skanowania"
+
+- id: final.scan.enterprise_feature
+  translation: "Raporty skanowania podatności są dostępne wyłącznie za pośrednictwem Talos Linux Image Factory Enterprise."
+
 - id: final.disk_image.secure_boot
   translation: "Obraz dysku SecureBoot"
 

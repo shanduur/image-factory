@@ -28,6 +28,20 @@ The response is a JSON-encoded VEX document which can be consumed directly by vu
 grype sbom:talos.spdx.json --vex response.vex.json
 ```
 
+### `GET /scans/:schematic/:version/:arch/:report`
+
+> [!NOTE]
+> Enterprise feature: requires Talos Enterprise Image Factory.
+
+Returns a vulnerability scan report for the specified schematic, Talos Linux version and architecture.
+
+Supported report formats:
+
+* `.json` - JSON-encoded report in the format provided by the underlying vulnerability scanner
+* `.table` - human-readable table format
+* `.sarif` - SARIF format
+* `.cdx` - CycloneDX format
+
 ## HTTP Frontend API
 
 ### `POST /schematics`

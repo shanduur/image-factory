@@ -20,7 +20,7 @@ import (
 	"github.com/siderolabs/image-factory/internal/asset/cache"
 	"github.com/siderolabs/image-factory/internal/mime"
 	"github.com/siderolabs/image-factory/internal/profile"
-	"github.com/siderolabs/image-factory/pkg/enterprise"
+	enterrors "github.com/siderolabs/image-factory/pkg/enterprise/errors"
 )
 
 // checksumSuffixes maps supported checksum file extensions to themselves.
@@ -58,7 +58,7 @@ func (f *Frontend) handleImage(ctx context.Context, w http.ResponseWriter, r *ht
 	wantChecksum := checksumSuffix != ""
 
 	if wantChecksum && f.checksummer == nil {
-		return xerrors.NewTaggedf[enterprise.ErrNotEnabledTag]("enterprise not enabled: checksum endpoint is not available")
+		return xerrors.NewTaggedf[enterrors.NotEnabledTag]("enterprise not enabled: checksum endpoint is not available")
 	}
 
 	schematic, err := f.schematicFactory.Get(ctx, schematicID, f.options.AuthProvider)
