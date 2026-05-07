@@ -298,7 +298,7 @@ func testOwnership(ctx context.Context, t *testing.T, baseURL string) {
 		c, err := client.New(baseURL, clientAuthCredentials()...)
 		require.NoError(t, err)
 
-		ownedSchematicID, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
+		ownedSchematicID, _, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
 		require.NoError(t, err)
 	}
 
@@ -349,6 +349,17 @@ func testOwnership(ctx context.Context, t *testing.T, baseURL string) {
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
+
+	t.Run("PostSchematic_OwnerMismatch_403", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := client.New(baseURL, clientAuthCredentials()...)
+		require.NoError(t, err)
+
+		_, _, err = c.SchematicCreate(ctx, schematicpkg.Schematic{Owner: "bob"})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "HTTP 403")
+	})
 }
 
 // testAuthS3NoRedirect asserts that the factory serves assets directly (no
@@ -372,7 +383,7 @@ func testAuthS3NoRedirect(t *testing.T, pool *dockertest.Pool) {
 		c, err := client.New(baseURL, clientAuthCredentials()...)
 		require.NoError(t, err)
 
-		_, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
+		_, _, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
 		require.NoError(t, err)
 	}
 
@@ -428,7 +439,7 @@ func testAuthCDNNoRedirect(t *testing.T, pool *dockertest.Pool) {
 		c, err := client.New(baseURL, clientAuthCredentials()...)
 		require.NoError(t, err)
 
-		_, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
+		_, _, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
 		require.NoError(t, err)
 	}
 

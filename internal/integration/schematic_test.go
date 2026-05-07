@@ -91,13 +91,15 @@ func init() {
 func createSchematicGetID(ctx context.Context, t *testing.T, c *client.Client, schematic schematic.Schematic) string {
 	t.Helper()
 
-	id, err := c.SchematicCreate(ctx, schematic)
+	id, normalized, err := c.SchematicCreate(ctx, schematic)
 	require.NoError(t, err)
+
+	schematic.Owner, _ = authCredentials()
+	assert.Equal(t, &schematic, normalized)
 
 	// get the schematic back and compare
 	retrieved, err := c.SchematicGet(ctx, id)
 	require.NoError(t, err)
-	schematic.Owner, _ = authCredentials()
 	assert.Equal(t, &schematic, retrieved)
 
 	return id

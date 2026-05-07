@@ -58,11 +58,17 @@ overlay: # optional
     data: "mydata"
 ```
 
-Output is a JSON-encoded schematic ID:
+Output is a JSON object containing the schematic ID and the canonical schematic body as YAML:
 
 ```json
-{"id":"2a63b6e7dab90ec9d44f213339b9545bd39c6499b22a14cf575c1ca4b6e39ff8"}
+{
+  "id": "2a63b6e7dab90ec9d44f213339b9545bd39c6499b22a14cf575c1ca4b6e39ff8",
+  "schematic": "customization:\n    extraKernelArgs:\n        - vga=791\n"
+}
 ```
+
+The `schematic` field is the canonical representation used to compute the ID.
+Callers should treat it as authoritative, since the factory may modify or add fields to the submitted schematic, for example setting `owner` for authenticated requests.
 
 This ID can be used to download images with this schematic.
 
@@ -72,6 +78,8 @@ Well-known schematic IDs:
 
 The schematic in Enterprise edition may contain an `owner` field, which restricts access to the schematic to the specified owner only.
 This requires authentication to be enabled.
+When authentication is enabled, the factory sets `owner` to the authenticated user.
+If the request body specifies an `owner` that does not match the authenticated user, the request is rejected.
 
 ### `GET /schematics/:schematic`
 

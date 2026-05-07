@@ -69,7 +69,7 @@ func testFrontendAuth(ctx context.Context, baseURL string) func(t *testing.T) {
 			c, err := client.New(baseURL, clientAuthCredentials()...)
 			require.NoError(t, err)
 
-			_, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
+			_, _, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
 			require.NoError(t, err)
 		})
 
@@ -83,7 +83,7 @@ func testFrontendAuth(ctx context.Context, baseURL string) func(t *testing.T) {
 			c, err := client.New(baseURL, client.WithBasicAuth(username, password))
 			require.NoError(t, err)
 
-			_, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
+			_, _, err = c.SchematicCreate(ctx, schematicpkg.Schematic{})
 			require.Error(t, err)
 			require.ErrorContains(t, err, "HTTP 401: authentication required")
 		})

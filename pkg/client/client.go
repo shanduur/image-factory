@@ -66,23 +66,43 @@ func (c *Client) BaseURL() string {
 }
 
 // SchematicCreate generates new schematic from the configuration.
-func (c *Client) SchematicCreate(ctx context.Context, schematic schematic.Schematic) (string, error) {
-	data, err := schematic.Marshal()
+//
+// It returns the schematic ID and the normalized schematic as returned by the factory.
+// The normalized schematic should be considered authoritative as it may differ from the
+// input (for example, the factory may set the owner field for authenticated requests).
+func (c *Client) SchematicCreate(ctx context.Context, sc schematic.Schematic) (string, *schematic.Schematic, error) {
+	data, err := sc.Marshal()
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	var response struct {
-		ID string `json:"id"`
+		ID        string `json:"id"`
+		Schematic string `json:"schematic"`
 	}
 
 	if err = c.do(ctx, http.MethodPost, "/schematics", data, &response, map[string]string{
 		"Content-Type": "application/yaml",
 	}); err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	return response.ID, nil
+	if response.Schematic == "" {
+		// Older factories don't return the schematic in the create response, fetch it separately.
+		normalized, getErr := c.SchematicGet(ctx, response.ID)
+		if getErr != nil {
+			return "", nil, getErr
+		}
+
+		return response.ID, normalized, nil
+	}
+
+	normalized, err := schematic.Unmarshal([]byte(response.Schematic))
+	if err != nil {
+		return "", nil, err
+	}
+
+	return response.ID, normalized, nil
 }
 
 func (c *Client) SchematicGet(ctx context.Context, schematicID string) (*schematic.Schematic, error) {

@@ -7,6 +7,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -35,6 +36,10 @@ func (f *Frontend) handleSchematicCreate(ctx context.Context, w http.ResponseWri
 
 	if f.options.AuthProvider != nil {
 		if username, ok := f.options.AuthProvider.UsernameFromContext(ctx); ok {
+			if schematic.Owner != "" && schematic.Owner != username {
+				return xerrors.NewTagged[schematicpkg.ForbiddenTag](errors.New("schematic owner does not match authenticated user"))
+			}
+
 			schematic.Owner = username
 		}
 	}
@@ -44,13 +49,20 @@ func (f *Frontend) handleSchematicCreate(ctx context.Context, w http.ResponseWri
 		return err
 	}
 
+	normalized, err := schematic.Marshal()
+	if err != nil {
+		return err
+	}
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
 	resp := struct {
-		ID string `json:"id"`
+		ID        string `json:"id"`
+		Schematic string `json:"schematic"`
 	}{
-		ID: id,
+		ID:        id,
+		Schematic: string(normalized),
 	}
 
 	return json.NewEncoder(w).Encode(resp)
