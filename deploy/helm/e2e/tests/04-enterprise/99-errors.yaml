@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-factory
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: image-factory-htpasswd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: image-factory-grype-db
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: e2e-grype-existing

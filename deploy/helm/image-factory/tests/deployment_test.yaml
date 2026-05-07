@@ -522,3 +522,178 @@ tests:
       - equal:
           path: metadata.namespace
           value: custom-namespace
+
+  # ========================================
+  # Enterprise Auth + Grype DB Volume Tests
+  # ========================================
+  - it: Should not mount htpasswd or grype-db volumes by default
+    template: deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          any: true
+          content:
+            name: htpasswd
+      - notContains:
+          path: spec.template.spec.volumes
+          any: true
+          content:
+            name: grype-db
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          any: true
+          content:
+            name: htpasswd
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          any: true
+          content:
+            name: grype-db
+
+  - it: Should mount htpasswd Secret at parent directory when auth.enabled
+    template: deployment.yaml
+    set:
+      auth:
+        enabled: true
+        htpasswd: "u:$2y$05$x"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: htpasswd
+            secret:
+              secretName: RELEASE-NAME-image-factory-htpasswd
+              items:
+                - key: htpasswd
+                  path: htpasswd
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: htpasswd
+            mountPath: /etc/image-factory/auth
+            readOnly: true
+
+  - it: Should use existing Secret for htpasswd when set
+    template: deployment.yaml
+    set:
+      auth:
+        enabled: true
+        existingSecret: my-htpasswd-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: htpasswd
+            secret:
+              secretName: my-htpasswd-secret
+              items:
+                - key: htpasswd
+                  path: htpasswd
+
+  - it: Should derive mountPath and item path from custom htpasswdPath
+    template: deployment.yaml
+    set:
+      auth:
+        enabled: true
+        htpasswd: "u:$2y$05$x"
+        htpasswdPath: /var/run/auth/creds
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: htpasswd
+            mountPath: /var/run/auth
+            readOnly: true
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: htpasswd
+            secret:
+              secretName: RELEASE-NAME-image-factory-htpasswd
+              items:
+                - key: htpasswd
+                  path: creds
+
+  - it: Should mount grype-db emptyDir by default when grypeDB.enabled
+    template: deployment.yaml
+    set:
+      grypeDB:
+        enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: grype-db
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: grype-db
+            mountPath: /var/lib/grype
+
+  - it: Should set sizeLimit on grype-db emptyDir when provided
+    template: deployment.yaml
+    set:
+      grypeDB:
+        enabled: true
+        emptyDir:
+          sizeLimit: 5Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: grype-db
+            emptyDir:
+              sizeLimit: 5Gi
+
+  - it: Should mount chart-managed PVC when grypeDB.type=pvc
+    template: deployment.yaml
+    set:
+      grypeDB:
+        enabled: true
+        type: pvc
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: grype-db
+            persistentVolumeClaim:
+              claimName: RELEASE-NAME-image-factory-grype-db
+
+  - it: Should mount existingClaim when grypeDB.type=existingClaim
+    template: deployment.yaml
+    set:
+      grypeDB:
+        enabled: true
+        type: existingClaim
+        existingClaim: my-grype-pvc
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: grype-db
+            persistentVolumeClaim:
+              claimName: my-grype-pvc
+
+  - it: Should fail when grypeDB.type=existingClaim and existingClaim is empty
+    template: deployment.yaml
+    set:
+      grypeDB:
+        enabled: true
+        type: existingClaim
+    asserts:
+      - failedTemplate:
+          errorMessage: ".Values.grypeDB.existingClaim is required when grypeDB.type=existingClaim"
+
+  - it: Should honor grypeDB.mountPath override
+    template: deployment.yaml
+    set:
+      grypeDB:
+        enabled: true
+        mountPath: /data/grype
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: grype-db
+            mountPath: /data/grype

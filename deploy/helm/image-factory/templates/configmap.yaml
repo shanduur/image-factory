@@ -7,4 +7,8 @@ metadata:
     {{- include "image-factory.labels" . | nindent 4 }}
 data:
   config.yaml: |
-    {{- .Values.config | toYamlPretty | nindent 4 }}
+    {{- $cfg := .Values.config | default dict | deepCopy }}
+    {{- if and .Values.auth.enabled (not (hasKey $cfg "authentication")) }}
+    {{- $_ := set $cfg "authentication" (dict "enabled" true "htpasswdPath" .Values.auth.htpasswdPath) }}
+    {{- end }}
+    {{- $cfg | toYamlPretty | nindent 4 }}

@@ -225,6 +225,62 @@ cacheSigningKey:
   # Generate using: openssl ecparam -name prime256v1 -genkey -noout -out cache-signing.key
   key: |-
 
+# -- Enterprise Authentication (htpasswd)
+# Requires the Enterprise image-factory build. The chart cannot verify image identity;
+# enabling this on a non-Enterprise image causes the app to ignore the configuration.
+auth:
+  # -- Enable htpasswd authentication. When true, the chart mounts the htpasswd Secret
+  # and injects `authentication.enabled: true` and `authentication.htpasswdPath` into
+  # the application config (unless `config.authentication` is already set by the user).
+  enabled: false
+  # -- Path inside the container where the htpasswd file is exposed.
+  # The Secret is mounted at the parent directory (no subPath) so the in-app fsnotify
+  # watcher reloads on Secret rotation. The basename of this path must equal the Secret
+  # data key ("htpasswd").
+  htpasswdPath: /etc/image-factory/auth/htpasswd
+  # -- Name of an existing Secret containing an "htpasswd" data key (bcrypt hashes only).
+  # Example: kubectl create secret generic my-htpasswd --from-file=htpasswd=./users.htpasswd
+  existingSecret: ""
+  # @schema type:string
+  # -- If 'existingSecret' is empty and auth.enabled=true, a Secret is created from this content.
+  # Multiline htpasswd content. Bcrypt hashes only ($2y$/$2a$/$2b$).
+  # Generate using: htpasswd -bnB user password >> users.htpasswd
+  htpasswd: |-
+
+# -- Grype Vulnerability DB Volume (Enterprise scanner)
+# The vulnerability scanner stores the Grype DB at /var/lib/grype (hardcoded in the application).
+# This block lets you choose how that volume is provided.
+grypeDB:
+  # -- Provision the Grype DB volume. Independent of `auth.enabled`.
+  # Required when running the Enterprise build with the scanner endpoint active.
+  enabled: false
+  # @schema enum:[emptyDir, pvc, existingClaim]
+  # -- Volume backing type: emptyDir | pvc (chart-managed) | existingClaim
+  type: emptyDir
+  # -- Mount path. Must match the application's hardcoded path.
+  mountPath: /var/lib/grype
+  # -- emptyDir options (used when type=emptyDir). Disk-backed by design (no Memory medium).
+  emptyDir:
+    # @schema type:string
+    # -- Optional sizeLimit for the emptyDir volume.
+    sizeLimit: ""
+  # -- PVC options (used when type=pvc). The chart creates a PersistentVolumeClaim.
+  pvc:
+    # @schema type:string
+    # -- StorageClassName for the PVC.
+    storageClassName: ""
+    # -- Access modes for the PVC.
+    accessModes:
+      - ReadWriteOnce
+    # -- Requested storage size for the PVC.
+    size: 10Gi
+    # -- Additional annotations for the PVC.
+    annotations: {}
+    # -- Additional labels for the PVC.
+    labels: {}
+  # -- Name of a pre-existing PersistentVolumeClaim (used when type=existingClaim).
+  existingClaim: ""
+
 # -- Ingress Configuration
 # This section configures standard Kubernetes Ingress resources.
 # Use this if you are using an Ingress Controller like NGINX, Traefik, or HAProxy.

@@ -101,6 +101,15 @@ spec:
             - name: cache-signing-key
               mountPath: /etc/image-factory/keys
               readOnly: true
+            {{- if .Values.auth.enabled }}
+            - name: htpasswd
+              mountPath: {{ dir .Values.auth.htpasswdPath }}
+              readOnly: true
+            {{- end }}
+            {{- if .Values.grypeDB.enabled }}
+            - name: grype-db
+              mountPath: {{ .Values.grypeDB.mountPath }}
+            {{- end }}
           {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -116,6 +125,31 @@ spec:
             items:
               - key: cache-signing.key
                 path: cache-signing.key
+        {{- if .Values.auth.enabled }}
+        - name: htpasswd
+          secret:
+            secretName: {{ include "image-factory.htpasswdSecret" . }}
+            items:
+              - key: htpasswd
+                path: {{ base .Values.auth.htpasswdPath }}
+        {{- end }}
+        {{- if .Values.grypeDB.enabled }}
+        - name: grype-db
+          {{- if eq .Values.grypeDB.type "emptyDir" }}
+          {{- if .Values.grypeDB.emptyDir.sizeLimit }}
+          emptyDir:
+            sizeLimit: {{ .Values.grypeDB.emptyDir.sizeLimit }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+          {{- else if eq .Values.grypeDB.type "pvc" }}
+          persistentVolumeClaim:
+            claimName: {{ include "image-factory.grypeDBClaim" . }}
+          {{- else if eq .Values.grypeDB.type "existingClaim" }}
+          persistentVolumeClaim:
+            claimName: {{ required ".Values.grypeDB.existingClaim is required when grypeDB.type=existingClaim" .Values.grypeDB.existingClaim }}
+          {{- end }}
+        {{- end }}
       {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

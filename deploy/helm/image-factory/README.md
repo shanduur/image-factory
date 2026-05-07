@@ -320,6 +320,11 @@ extraVolumeMounts:
 | affinity | object | `{}` |  |
 | args[0] | string | `"--config=/config.yaml"` | Path to the configuration file (mounted via ConfigMap). Do not remove this unless you are using args only. |
 | args[1] | string | `"--log-level=info"` | Log level [debug info warn error dpanic panic fatal] (default info) |
+| auth | object | `{"enabled":false,"existingSecret":"","htpasswd":"","htpasswdPath":"/etc/image-factory/auth/htpasswd"}` | Enterprise Authentication (htpasswd) Requires the Enterprise image-factory build. The chart cannot verify image identity; enabling this on a non-Enterprise image causes the app to ignore the configuration. |
+| auth.enabled | bool | `false` | Enable htpasswd authentication. When true, the chart mounts the htpasswd Secret and injects `authentication.enabled: true` and `authentication.htpasswdPath` into the application config (unless `config.authentication` is already set by the user). |
+| auth.existingSecret | string | `""` | Name of an existing Secret containing an "htpasswd" data key (bcrypt hashes only). Example: kubectl create secret generic my-htpasswd --from-file=htpasswd=./users.htpasswd |
+| auth.htpasswd | string | `""` | If 'existingSecret' is empty and auth.enabled=true, a Secret is created from this content. Multiline htpasswd content. Bcrypt hashes only ($2y$/$2a$/$2b$). Generate using: htpasswd -bnB user password >> users.htpasswd |
+| auth.htpasswdPath | string | `"/etc/image-factory/auth/htpasswd"` | Path inside the container where the htpasswd file is exposed. The Secret is mounted at the parent directory (no subPath) so the in-app fsnotify watcher reloads on Secret rotation. The basename of this path must equal the Secret data key ("htpasswd"). |
 | cacheSigningKey | object | `{"existingSecret":"","key":""}` | Image Cache Signing Key Configuration # This secret contains the ECDSA private key used to sign cached Talos image artifacts. # This ensures that nodes can verify the integrity of images served by the Image Factory. # If you are running a self-hosted Image Factory, this key is required. |
 | cacheSigningKey.existingSecret | string | `""` | Name of an existing Secret containing the ECDSA private key. IMPORTANT: The existing secret MUST contain a data key named exactly "cache-signing.key". If your secret uses a different key, Image Factory will not find the file. Example creation: kubectl create secret generic image-factory-cache-signing-key --from-file=cache-signing.key=./signing-key.key |
 | cacheSigningKey.key | string | `""` | If 'existingSecret' is empty, a new Secret will be created. The ECDSA private key content (multiline string). Generate using: openssl ecparam -name prime256v1 -genkey -noout -out cache-signing.key |
@@ -339,6 +344,19 @@ extraVolumeMounts:
 | gatewayApi.ui.hostnames | list | `["factory.example.com"]` | Image Factory UI hostname |
 | gatewayApi.ui.labels | object | `{}` | Additional Labels |
 | gatewayApi.ui.parentRefs | list | `[]` | The Gateway(s) to attach this route to. You MUST define at least one parentRef for the route to be active. |
+| grypeDB | object | `{"emptyDir":{"sizeLimit":""},"enabled":false,"existingClaim":"","mountPath":"/var/lib/grype","pvc":{"accessModes":["ReadWriteOnce"],"annotations":{},"labels":{},"size":"10Gi","storageClassName":""},"type":"emptyDir"}` | Grype Vulnerability DB Volume (Enterprise scanner) The vulnerability scanner stores the Grype DB at /var/lib/grype (hardcoded in the application). This block lets you choose how that volume is provided. |
+| grypeDB.emptyDir | object | `{"sizeLimit":""}` | emptyDir options (used when type=emptyDir). Disk-backed by design (no Memory medium). |
+| grypeDB.emptyDir.sizeLimit | string | `""` | Optional sizeLimit for the emptyDir volume. |
+| grypeDB.enabled | bool | `false` | Provision the Grype DB volume. Independent of `auth.enabled`. Required when running the Enterprise build with the scanner endpoint active. |
+| grypeDB.existingClaim | string | `""` | Name of a pre-existing PersistentVolumeClaim (used when type=existingClaim). |
+| grypeDB.mountPath | string | `"/var/lib/grype"` | Mount path. Must match the application's hardcoded path. |
+| grypeDB.pvc | object | `{"accessModes":["ReadWriteOnce"],"annotations":{},"labels":{},"size":"10Gi","storageClassName":""}` | PVC options (used when type=pvc). The chart creates a PersistentVolumeClaim. |
+| grypeDB.pvc.accessModes | list | `["ReadWriteOnce"]` | Access modes for the PVC. |
+| grypeDB.pvc.annotations | object | `{}` | Additional annotations for the PVC. |
+| grypeDB.pvc.labels | object | `{}` | Additional labels for the PVC. |
+| grypeDB.pvc.size | string | `"10Gi"` | Requested storage size for the PVC. |
+| grypeDB.pvc.storageClassName | string | `""` | StorageClassName for the PVC. |
+| grypeDB.type | string | `"emptyDir"` | Volume backing type: emptyDir | pvc (chart-managed) | existingClaim |
 | hostUsers | bool | `true` | Controls whether the pod uses the host's user namespace. When true (default), the pod uses the host user namespace. When false, the pod uses a separate user namespace for enhanced security isolation. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy for Image Factory |
 | image.repository | string | `"ghcr.io/siderolabs/image-factory"` | Repository to use for Image Factory |

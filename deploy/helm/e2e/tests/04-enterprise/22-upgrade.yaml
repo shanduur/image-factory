@@ -1,0 +1,11 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+metadata:
+  name: upgrade-grypeDB-existingClaim
+commands:
+  - command: >-
+      helm upgrade --install image-factory ../../../image-factory
+        --wait --timeout=600s --reuse-values
+        --set grypeDB.type=existingClaim
+        --set grypeDB.existingClaim=e2e-grype-existing
+    namespaced: true
