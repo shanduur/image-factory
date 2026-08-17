@@ -41,6 +41,7 @@ func TestGenerateReference(t *testing.T) {
 	assert.Contains(t, output, "|`token`|query|no|string|**Enterprise.**")
 	assert.Contains(t, output, "|`owner`|string|no|**Enterprise.**")
 	assert.Contains(t, output, "|`extraKernelArgs`|array<string>|no|Additional arguments appended to the kernel command line.")
+	assert.Contains(t, output, "**Supported values for `path`**")
 	assert.Contains(t, output, "`<platform>-<arch>[-secureboot].iso`")
 	assert.Contains(t, output, "`<platform>-<arch>[-secureboot].<disk-format>[.<compression>]`")
 	assert.Contains(t, output, "Disk formats are `raw`, `qcow2`, `vhd`, and `ova`.")

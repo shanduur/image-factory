@@ -290,6 +290,8 @@ func renderParameters(output *bytes.Buffer, pathParameters, operationParameters 
 		return
 	}
 
+	details := make([]*openapi3.Parameter, 0)
+
 	fmt.Fprintf(output, "#### Parameters for `%s`\n\n", operationLabel)
 	output.WriteString("|Name|In|Required|Type|Description|\n")
 	output.WriteString("|---|---|---|---|---|\n")
@@ -306,7 +308,14 @@ func renderParameters(output *bytes.Buffer, pathParameters, operationParameters 
 			required = "yes"
 		}
 
-		description := normalizeCell(parameter.Description)
+		description := normalizeText(parameter.Description)
+		if strings.Contains(description, "\n") {
+			details = append(details, parameter)
+
+			description, _, _ = strings.Cut(description, "\n")
+		}
+
+		description = normalizeCell(description)
 		if parameter.Example != nil {
 			description = appendSentence(description, "Example: `"+normalizeCell(fmt.Sprint(parameter.Example))+"`.")
 		}
@@ -321,6 +330,10 @@ func renderParameters(output *bytes.Buffer, pathParameters, operationParameters 
 	}
 
 	output.WriteString("\n")
+
+	for _, detail := range details {
+		fmt.Fprintf(output, "**Supported values for `%s`**\n\n%s\n\n", normalizeCell(detail.Name), markEnterprise(proseText(detail.Description), detail.Extensions))
+	}
 }
 
 func mergeParameters(pathParameters, operationParameters openapi3.Parameters) openapi3.Parameters {
