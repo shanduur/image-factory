@@ -24,11 +24,27 @@ ArtifactPath:
   name: path
   in: path
   required: true
-  description: Artifact filename or platform-specific route suffix.
+  description: |-
+    Artifact filename. Supported forms are:
+
+    - `kernel-<arch>`;
+    - `cmdline-<platform>-<arch>[-secureboot]`;
+    - `initramfs-<arch>.xz`;
+    - `<platform>-<arch>[-secureboot].iso`;
+    - `<platform>-<arch>[-secureboot]-uki.efi`;
+    - `installer-<arch>[-secureboot].tar`;
+    - `<platform>-installer-<arch>[-secureboot].tar`;
+    - `<platform>-<arch>[-secureboot].<disk-format>[.<compression>]`.
+
+    Architectures are `amd64` and `arm64`; `x86_64` and `i386` are accepted as iPXE aliases for `amd64`.
+    Disk formats are `raw`, `qcow2`, `vhd`, and `ova`.
+    Compression suffixes are `tar.gz`, `gz`, `xz`, and `zst`.
+    Enterprise checksum or signature downloads append exactly one of `.sha256`, `.sha512`, or `.sigstore.json` to any supported artifact filename.
   example: metal-amd64.raw.xz
+  x-image-factory-validate-path: true
   schema:
     type: string
-    pattern: ^[^/?#]+$
+    pattern: '^(?:kernel-(?:amd64|arm64|x86_64|i386)|cmdline-(?:[A-Za-z0-9_]+|digital-ocean)-(?:amd64|arm64|x86_64|i386)(?:-secureboot)?|initramfs-(?:amd64|arm64|x86_64|i386)\.xz|(?:[A-Za-z0-9_]+|digital-ocean)-(?:amd64|arm64|x86_64|i386)(?:-secureboot)?\.iso|(?:[A-Za-z0-9_]+|digital-ocean)-(?:amd64|arm64|x86_64|i386)(?:-secureboot)?-uki\.efi|installer-(?:amd64|arm64|x86_64|i386)(?:-secureboot)?\.tar|(?:[A-Za-z0-9_]+|digital-ocean)-installer-(?:amd64|arm64|x86_64|i386)(?:-secureboot)?\.tar|(?:[A-Za-z0-9_]+|digital-ocean)-(?:amd64|arm64|x86_64|i386)(?:-secureboot)?\.(?:raw|qcow2|vhd|ova)(?:\.tar\.gz|\.gz|\.xz|\.zst)?)(?:\.sha256|\.sha512|\.sigstore\.json)?$'
 Architecture:
   name: arch
   in: path

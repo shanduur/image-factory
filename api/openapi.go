@@ -172,7 +172,9 @@ func newRoutingDocument(ctx context.Context) (*openapi3.T, error) {
 func relaxRoutingPathValidation(document *openapi3.T) {
 	relax := func(parameters openapi3.Parameters) {
 		for _, parameter := range parameters {
-			if parameter.Value != nil && parameter.Value.In == openapi3.ParameterInPath {
+			if parameter.Value != nil &&
+				parameter.Value.In == openapi3.ParameterInPath &&
+				parameter.Value.Extensions["x-image-factory-validate-path"] != true {
 				parameter.Value.Schema = &openapi3.SchemaRef{Value: openapi3.NewStringSchema()}
 			}
 		}

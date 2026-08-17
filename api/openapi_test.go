@@ -440,3 +440,67 @@ func TestContractValidateRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestContractValidatesArtifactPaths(t *testing.T) {
+	t.Parallel()
+
+	contract, err := api.NewContract(t.Context())
+	require.NoError(t, err)
+
+	const prefix = "/image/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/v1.12.0/"
+
+	tests := []struct {
+		path  string
+		valid bool
+	}{
+		{path: "kernel-amd64", valid: true},
+		{path: "kernel-arm64", valid: true},
+		{path: "kernel-x86_64", valid: true},
+		{path: "kernel-i386", valid: true},
+		{path: "cmdline-metal-amd64", valid: true},
+		{path: "cmdline-digital-ocean-arm64-secureboot", valid: true},
+		{path: "initramfs-amd64.xz", valid: true},
+		{path: "metal-amd64.iso", valid: true},
+		{path: "metal-arm64-secureboot.iso", valid: true},
+		{path: "metal-amd64-secureboot-uki.efi", valid: true},
+		{path: "installer-amd64.tar", valid: true},
+		{path: "installer-arm64-secureboot.tar", valid: true},
+		{path: "aws-installer-amd64.tar", valid: true},
+		{path: "digital-ocean-installer-arm64-secureboot.tar", valid: true},
+		{path: "metal-amd64.raw", valid: true},
+		{path: "metal-amd64.raw.xz", valid: true},
+		{path: "metal-amd64.raw.zst", valid: true},
+		{path: "gcp-amd64.raw.tar.gz", valid: true},
+		{path: "digital-ocean-arm64.raw.gz", valid: true},
+		{path: "aws-amd64.qcow2", valid: true},
+		{path: "aws-amd64.qcow2.xz", valid: true},
+		{path: "azure-amd64.vhd", valid: true},
+		{path: "vmware-amd64.ova", valid: true},
+		{path: "metal-amd64.raw.xz.sha256", valid: true},
+		{path: "metal-amd64.iso.sha512", valid: true},
+		{path: "kernel-amd64.sigstore.json", valid: true},
+		{path: "not-an-artifact", valid: false},
+		{path: "kernel-riscv64", valid: false},
+		{path: "metal-amd64.img", valid: false},
+		{path: "metal-amd64.raw.bz2", valid: false},
+		{path: "metal-amd64.raw.xz.sha256sum", valid: false},
+		{path: "metal-amd64.raw.xz.sha256.sigstore.json", valid: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			t.Parallel()
+
+			for _, method := range []string{http.MethodGet, http.MethodHead} {
+				request := httptest.NewRequestWithContext(t.Context(), method, prefix+test.path, nil)
+				_, _, validationErr := contract.ValidateRequest(request.Context(), request)
+
+				if test.valid {
+					require.NoError(t, validationErr, method)
+				} else {
+					require.Error(t, validationErr, method)
+				}
+			}
+		})
+	}
+}
