@@ -313,13 +313,14 @@ Builds or retrieves an image artifact for a schematic and Talos version, returni
 |---|---|---|---|---|
 |`schematic`|path|yes|string|SHA-256 identifier returned by `POST /schematics`; Example: `376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba`.|
 |`version`|path|yes|string|Semantic Talos Linux version, accepted with or without the leading `v`; Example: `v1.13.0`.|
-|`path`|path|yes|string|Artifact filename; Supported forms are:; Example: `metal-amd64.raw.xz`.|
+|`path`|path|yes|string|Artifact filename; Example: `metal-amd64.raw.xz`.|
 |`filename`|query|no|string|Override for the attachment filename in `Content-Disposition`; Example: `talos-metal-amd64.raw.xz`.|
 |`token`|query|no|string|**Enterprise.** Short-lived JWT issued by `POST /download-token` for image downloads; Example: `eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9...`.|
 
 **Supported values for `path`**
 
 Artifact filename.
+
 Supported forms are:
 
 - `kernel-<arch>`;
@@ -367,13 +368,14 @@ Returns the status and artifact headers for an image download without returning 
 |---|---|---|---|---|
 |`schematic`|path|yes|string|SHA-256 identifier returned by `POST /schematics`; Example: `376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba`.|
 |`version`|path|yes|string|Semantic Talos Linux version, accepted with or without the leading `v`; Example: `v1.13.0`.|
-|`path`|path|yes|string|Artifact filename; Supported forms are:; Example: `metal-amd64.raw.xz`.|
+|`path`|path|yes|string|Artifact filename; Example: `metal-amd64.raw.xz`.|
 |`filename`|query|no|string|Override for the attachment filename in `Content-Disposition`; Example: `talos-metal-amd64.raw.xz`.|
 |`token`|query|no|string|**Enterprise.** Short-lived JWT issued by `POST /download-token` for image downloads; Example: `eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9...`.|
 
 **Supported values for `path`**
 
 Artifact filename.
+
 Supported forms are:
 
 - `kernel-<arch>`;
