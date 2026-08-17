@@ -400,14 +400,13 @@ func TestContractValidateRequest(t *testing.T) {
 			},
 		},
 		{
-			name:   "unknown schematic field",
+			name:   "handler-owned schematic body validation",
 			method: http.MethodPost,
 			target: "/schematics",
 			body:   `{"unknown":true}`,
 			headers: map[string]string{
 				"Content-Type": "application/json",
 			},
-			wantErr: "property \"unknown\" is unsupported",
 		},
 		{
 			name:   "handler-owned schematic path validation",

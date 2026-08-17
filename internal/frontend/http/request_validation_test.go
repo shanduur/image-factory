@@ -20,7 +20,7 @@ import (
 	factoryhttp "github.com/siderolabs/image-factory/internal/frontend/http"
 )
 
-func TestWrapperValidatesDocumentedRequests(t *testing.T) {
+func TestWrapperLeavesSchematicBodyValidationToHandler(t *testing.T) {
 	t.Parallel()
 
 	frontend := factoryhttp.NewTestFrontendWithContract(zaptest.NewLogger(t))
@@ -38,9 +38,8 @@ func TestWrapperValidatesDocumentedRequests(t *testing.T) {
 
 	handler(response, request, nil)
 
-	assert.False(t, called)
-	assert.Equal(t, http.StatusBadRequest, response.Code)
-	require.Contains(t, response.Body.String(), `property "unknown" is unsupported`)
+	assert.True(t, called)
+	assert.Equal(t, http.StatusOK, response.Code)
 }
 
 func TestWrapperPreservesValidatedRequestBody(t *testing.T) {
@@ -141,7 +140,7 @@ func TestWrapperLeavesPathValidationToHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 }
 
-func TestWrapperValidatesSchematicBodyWithArbitraryContentType(t *testing.T) {
+func TestWrapperLeavesSchematicBodyValidationToHandlerWithArbitraryContentType(t *testing.T) {
 	t.Parallel()
 
 	frontend := factoryhttp.NewTestFrontendWithContract(zaptest.NewLogger(t))
@@ -158,7 +157,7 @@ func TestWrapperValidatesSchematicBodyWithArbitraryContentType(t *testing.T) {
 	response := httptest.NewRecorder()
 	handler(response, request, nil)
 
-	assert.False(t, called)
-	assert.Equal(t, http.StatusBadRequest, response.Code)
+	assert.True(t, called)
+	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, "application/x-www-form-urlencoded", request.Header.Get("Content-Type"))
 }

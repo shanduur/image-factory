@@ -14,6 +14,7 @@ post:
     machineScope: denied
     ownership: sets-owner
   x-image-factory-ignore-content-type: true
+  x-image-factory-handler-validates-body: true
   requestBody:
     required: true
     content:

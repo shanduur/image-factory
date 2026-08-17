@@ -224,8 +224,10 @@ func (contract *Contract) ValidateRequest(
 		return nil, nil, fmt.Errorf("match OpenAPI route: %w", err)
 	}
 
+	handlerValidatesBody := route.Operation.Extensions["x-image-factory-handler-validates-body"] == true
+
 	ignoreContentType := route.Operation.Extensions["x-image-factory-ignore-content-type"] == true
-	if ignoreContentType || request.Header.Get("Content-Type") == "" {
+	if !handlerValidatesBody && (ignoreContentType || request.Header.Get("Content-Type") == "") {
 		if route.Operation.RequestBody != nil && route.Operation.RequestBody.Value != nil {
 			if _, ok := route.Operation.RequestBody.Value.Content["application/yaml"]; ok {
 				originalHeader := request.Header.Clone()
@@ -244,6 +246,7 @@ func (contract *Contract) ValidateRequest(
 		Route:      route,
 		Options: &openapi3filter.Options{
 			AuthenticationFunc:  openapi3filter.NoopAuthenticationFunc,
+			ExcludeRequestBody:  handlerValidatesBody,
 			MultiError:          true,
 			SkipSettingDefaults: true,
 		},
