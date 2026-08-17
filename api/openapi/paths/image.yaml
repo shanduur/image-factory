@@ -5,7 +5,7 @@
 parameters:
 - $ref: ../components/parameters.yaml#/SchematicID
 - $ref: ../components/parameters.yaml#/TalosVersion
-- $ref: ../components/parameters.yaml#/ArtifactPath
+- $ref: ../components/parameters.yaml#/ImageArtifactPath
 - $ref: ../components/parameters.yaml#/Filename
 - $ref: ../components/parameters.yaml#/DownloadToken
 get:

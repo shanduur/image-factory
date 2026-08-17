@@ -140,6 +140,43 @@ func TestWrapperLeavesPathValidationToHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 }
 
+func TestWrapperValidatesImageArtifactPath(t *testing.T) {
+	t.Parallel()
+
+	const prefix = "/image/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/v1.12.0/"
+
+	for _, test := range []struct {
+		name       string
+		path       string
+		wantCalled bool
+		wantStatus int
+	}{
+		{name: "supported", path: "metal-amd64.raw.xz", wantCalled: true, wantStatus: http.StatusOK},
+		{name: "checksum", path: "metal-amd64.iso.sha256", wantCalled: true, wantStatus: http.StatusOK},
+		{name: "unsupported", path: "metal-amd64.zip", wantCalled: false, wantStatus: http.StatusBadRequest},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			frontend := factoryhttp.NewTestFrontendWithContract(zaptest.NewLogger(t))
+			called := false
+			handler := frontend.WrapHandler(func(context.Context, http.ResponseWriter, *http.Request, httprouter.Params) error {
+				called = true
+
+				return nil
+			})
+
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, prefix+test.path, nil)
+			response := httptest.NewRecorder()
+
+			handler(response, request, nil)
+
+			assert.Equal(t, test.wantCalled, called)
+			assert.Equal(t, test.wantStatus, response.Code)
+		})
+	}
+}
+
 func TestWrapperLeavesSchematicBodyValidationToHandlerWithArbitraryContentType(t *testing.T) {
 	t.Parallel()
 

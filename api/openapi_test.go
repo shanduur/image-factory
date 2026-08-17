@@ -503,4 +503,17 @@ func TestContractValidatesArtifactPaths(t *testing.T) {
 			}
 		})
 	}
+
+	for name, target := range map[string]string{
+		"PXE profile":     "/pxe/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/v1.12.0/metal-amd64",
+		"talosctl binary": "/talosctl/v1.12.0/talosctl-linux-amd64",
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, target, nil)
+			_, _, validationErr := contract.ValidateRequest(request.Context(), request)
+			require.NoError(t, validationErr)
+		})
+	}
 }
