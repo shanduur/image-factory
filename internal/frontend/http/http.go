@@ -30,6 +30,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/singleflight"
 
+	"github.com/siderolabs/image-factory/api"
 	"github.com/siderolabs/image-factory/internal/artifacts"
 	"github.com/siderolabs/image-factory/internal/asset"
 	"github.com/siderolabs/image-factory/internal/audit"
@@ -49,6 +50,7 @@ import (
 // Frontend is the HTTP frontend.
 type Frontend struct {
 	router            *httprouter.Router
+	contract          *api.Contract
 	schematicFactory  *schematic.Factory
 	assetBuilder      *asset.Builder
 	artifactsManager  *artifacts.Manager
@@ -94,8 +96,12 @@ type ImageProxyOptions struct {
 // Handler is a custom handler type that includes the context and httprouter params, and returns an error.
 type Handler = func(ctx context.Context, w http.ResponseWriter, r *http.Request, p httprouter.Params) error
 
+// InvalidRequestTag marks requests rejected by the OpenAPI contract.
+type InvalidRequestTag struct{}
+
 // NewFrontend creates a new HTTP frontend.
 func NewFrontend(
+	ctx context.Context,
 	logger *zap.Logger,
 	schematicFactory *schematic.Factory,
 	assetBuilder *asset.Builder,
@@ -125,6 +131,11 @@ func NewFrontend(
 	}
 
 	var err error
+
+	frontend.contract, err = api.NewContract(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create OpenAPI contract: %w", err)
+	}
 
 	frontend.puller, err = remotewrap.NewPuller(opts.RegistryRefreshInterval, opts.InstallerInternalNameOptions, opts.RemoteOptions)
 	if err != nil {
@@ -227,8 +238,9 @@ func NewFrontend(
 	registerPublicRoute(frontend.router.HEAD, "/talosctl/:version/:path", frontend.handleTalosctl)
 	registerPublicRoute(frontend.router.GET, "/talosctl/:version/:path", frontend.handleTalosctl)
 
-	// llms.txt - public
+	// machine-readable API documentation - public
 	registerPublicRoute(frontend.router.GET, "/llms.txt", frontend.handleLLMsTxt)
+	registerPublicRoute(frontend.router.GET, "/openapi.yaml", frontend.handleOpenAPI)
 
 	// UI - require auth (consistent with all other schematic-creating endpoints)
 	registerRoute(frontend.router.GET, "/", frontend.handleUI)
@@ -283,7 +295,7 @@ func (f *Frontend) wrapHandler(h Handler, requireAuth bool) httprouter.Handle {
 
 		var username string
 
-		handler := f.withAuth(h, requireAuth, &username, &state)
+		handler := f.withAuth(f.withContractValidation(h), requireAuth, &username, &state)
 
 		start := time.Now()
 		err := handler(ctx, sw, r, p)
@@ -336,6 +348,19 @@ func (f *Frontend) wrapHandler(h Handler, requireAuth bool) httprouter.Handle {
 				Error:     errString(err),
 			})
 		}
+	}
+}
+
+func (f *Frontend) withContractValidation(h Handler) Handler {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+		if f.contract != nil {
+			_, err := f.contract.ValidateIfMatched(ctx, r)
+			if err != nil {
+				return xerrors.NewTagged[InvalidRequestTag](fmt.Errorf("invalid request: %w", err))
+			}
+		}
+
+		return h(ctx, w, r, p)
 	}
 }
 
@@ -457,7 +482,8 @@ func MatchError(err error, callback func(message string, code int)) (zapcore.Lev
 	case xerrors.TagIs[profile.InvalidErrorTag](err),
 		xerrors.TagIs[schematicpkg.InvalidErrorTag](err),
 		xerrors.TagIs[enterrors.InvalidErrorTag](err),
-		xerrors.TagIs[InvalidImageTag](err):
+		xerrors.TagIs[InvalidImageTag](err),
+		xerrors.TagIs[InvalidRequestTag](err):
 		level = zap.WarnLevel
 		status = http.StatusBadRequest
 
