@@ -41,6 +41,12 @@ func TestGenerateReference(t *testing.T) {
 	assert.Contains(t, output, "|`token`|query|no|string|**Enterprise.**")
 	assert.Contains(t, output, "|`owner`|string|no|**Enterprise.**")
 	assert.Contains(t, output, "|`extraKernelArgs`|array<string>|no|Additional arguments appended to the kernel command line.")
+	assert.Contains(t, output, "`<platform>-<arch>[-secureboot].iso`")
+	assert.Contains(t, output, "`<platform>-<arch>[-secureboot].<disk-format>[.<compression>]`")
+	assert.Contains(t, output, "Disk formats are `raw`, `qcow2`, `vhd`, and `ova`.")
+	assert.Contains(t, output, "Compression suffixes are `tar.gz`, `gz`, `xz`, and `zst`.")
+	assert.Contains(t, output, "`.sha256`, `.sha512`, or `.sigstore.json`")
+	assert.NotContains(t, output, ".sha256sum")
 }
 
 func TestMethodRankCoversOpenAPIMethods(t *testing.T) {
