@@ -147,13 +147,16 @@ func TestWrapperValidatesImageArtifactPath(t *testing.T) {
 
 	for _, test := range []struct {
 		name       string
+		method     string
 		path       string
 		wantCalled bool
 		wantStatus int
 	}{
-		{name: "supported", path: "metal-amd64.raw.xz", wantCalled: true, wantStatus: http.StatusOK},
-		{name: "checksum", path: "metal-amd64.iso.sha256", wantCalled: true, wantStatus: http.StatusOK},
-		{name: "unsupported", path: "metal-amd64.zip", wantCalled: false, wantStatus: http.StatusBadRequest},
+		{name: "supported GET", method: http.MethodGet, path: "metal-amd64.raw.xz", wantCalled: true, wantStatus: http.StatusOK},
+		{name: "supported HEAD", method: http.MethodHead, path: "metal-amd64.raw.xz", wantCalled: true, wantStatus: http.StatusOK},
+		{name: "checksum", method: http.MethodGet, path: "metal-amd64.iso.sha256", wantCalled: true, wantStatus: http.StatusOK},
+		{name: "unsupported GET", method: http.MethodGet, path: "metal-amd64.zip", wantCalled: false, wantStatus: http.StatusBadRequest},
+		{name: "unsupported HEAD", method: http.MethodHead, path: "metal-amd64.zip", wantCalled: false, wantStatus: http.StatusBadRequest},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -166,7 +169,7 @@ func TestWrapperValidatesImageArtifactPath(t *testing.T) {
 				return nil
 			})
 
-			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, prefix+test.path, nil)
+			request := httptest.NewRequestWithContext(t.Context(), test.method, prefix+test.path, nil)
 			response := httptest.NewRecorder()
 
 			handler(response, request, nil)

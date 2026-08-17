@@ -24,6 +24,8 @@ import (
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"go.yaml.in/yaml/v4"
+
+	imageprofile "github.com/siderolabs/image-factory/internal/profile"
 )
 
 //go:embed openapi.yaml openapi/*/*.yaml
@@ -173,8 +175,7 @@ func relaxRoutingPathValidation(document *openapi3.T) {
 	relax := func(parameters openapi3.Parameters) {
 		for _, parameter := range parameters {
 			if parameter.Value != nil &&
-				parameter.Value.In == openapi3.ParameterInPath &&
-				parameter.Value.Extensions["x-image-factory-validate-path"] != true {
+				parameter.Value.In == openapi3.ParameterInPath {
 				parameter.Value.Schema = &openapi3.SchemaRef{Value: openapi3.NewStringSchema()}
 			}
 		}
@@ -256,6 +257,12 @@ func (contract *Contract) ValidateRequest(
 
 	if err = openapi3filter.ValidateRequest(ctx, input); err != nil {
 		return route, pathParams, fmt.Errorf("validate OpenAPI request: %w", err)
+	}
+
+	if route.Operation.Extensions["x-image-factory-validate-artifact-path"] == true {
+		if _, err = imageprofile.ParseArtifactPath(pathParams["path"], pathParams["version"]); err != nil {
+			return route, pathParams, fmt.Errorf("validate OpenAPI request: parameter %q in path has an error: %w", "path", err)
+		}
 	}
 
 	return route, pathParams, nil

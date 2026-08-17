@@ -472,6 +472,7 @@ func TestContractValidatesArtifactPaths(t *testing.T) {
 		{path: "metal-amd64.raw.zst", valid: true},
 		{path: "gcp-amd64.raw.tar.gz", valid: true},
 		{path: "digital-ocean-arm64.raw.gz", valid: true},
+		{path: "foo.bar-amd64.raw", valid: true},
 		{path: "aws-amd64.qcow2", valid: true},
 		{path: "aws-amd64.qcow2.xz", valid: true},
 		{path: "azure-amd64.vhd", valid: true},
@@ -485,6 +486,9 @@ func TestContractValidatesArtifactPaths(t *testing.T) {
 		{path: "metal-amd64.raw.bz2", valid: false},
 		{path: "metal-amd64.raw.xz.sha256sum", valid: false},
 		{path: "metal-amd64.raw.xz.sha256.sigstore.json", valid: false},
+		{path: "kernel-amd64.iso", valid: false},
+		{path: "cmdline-amd64.raw", valid: false},
+		{path: "installer-installer-amd64.tar", valid: false},
 	}
 
 	for _, test := range tests {
@@ -504,16 +508,27 @@ func TestContractValidatesArtifactPaths(t *testing.T) {
 		})
 	}
 
-	for name, target := range map[string]string{
-		"PXE profile":     "/pxe/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/v1.12.0/metal-amd64",
-		"talosctl binary": "/talosctl/v1.12.0/talosctl-linux-amd64",
+	for name, test := range map[string]struct {
+		target  string
+		methods []string
+	}{
+		"PXE profile": {
+			target:  "/pxe/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/v1.12.0/not-an-image-profile",
+			methods: []string{http.MethodGet},
+		},
+		"talosctl binary": {
+			target:  "/talosctl/v1.12.0/custom-binary-name",
+			methods: []string{http.MethodGet, http.MethodHead},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, target, nil)
-			_, _, validationErr := contract.ValidateRequest(request.Context(), request)
-			require.NoError(t, validationErr)
+			for _, method := range test.methods {
+				request := httptest.NewRequestWithContext(t.Context(), method, test.target, nil)
+				_, _, validationErr := contract.ValidateRequest(request.Context(), request)
+				require.NoError(t, validationErr, method)
+			}
 		})
 	}
 }

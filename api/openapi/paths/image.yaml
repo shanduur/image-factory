@@ -10,6 +10,7 @@ parameters:
 - $ref: ../components/parameters.yaml#/DownloadToken
 get:
   operationId: getImage
+  x-image-factory-validate-artifact-path: true
   summary: Download an image artifact
   tags:
   - Frontend API
@@ -41,6 +42,7 @@ get:
       $ref: "../components/responses.yaml#/InternalServerError"
 head:
   operationId: headImage
+  x-image-factory-validate-artifact-path: true
   summary: Inspect an image artifact
   tags:
   - Frontend API
