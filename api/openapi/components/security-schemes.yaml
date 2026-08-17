@@ -3,14 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 basicAuth:
+  x-enterprise: true
   type: http
   scheme: basic
   description: Htpasswd credentials, or an Auth0 JWT in the Basic password field.
 bearerAuth:
+  x-enterprise: true
   type: http
   scheme: bearer
   bearerFormat: JWT
 downloadToken:
+  x-enterprise: true
   type: apiKey
   in: query
   name: token

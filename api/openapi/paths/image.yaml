@@ -11,6 +11,13 @@ parameters:
 get:
   operationId: getImage
   summary: Download an image artifact
+  tags:
+  - Frontend API
+  description: >-
+    Builds or retrieves an image artifact for a schematic and Talos version, returning the bytes or a storage redirect.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: enforced
   security:
   - basicAuth: []
   - bearerAuth: []
@@ -35,6 +42,13 @@ get:
 head:
   operationId: headImage
   summary: Inspect an image artifact
+  tags:
+  - Frontend API
+  description: >-
+    Returns the status and artifact headers for an image download without returning its body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: enforced
   security:
   - basicAuth: []
   - bearerAuth: []

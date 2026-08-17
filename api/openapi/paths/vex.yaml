@@ -7,6 +7,14 @@ parameters:
 get:
   operationId: getVEX
   summary: Get the Talos VEX document
+  tags:
+  - Enterprise Frontend API
+  description: >-
+    Returns the JSON VEX document published for the requested Talos release.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: not-applicable
+  x-image-factory-min-talos-version: v1.13.0
   x-enterprise: true
   responses:
     '200':
@@ -22,6 +30,14 @@ get:
 head:
   operationId: headVEX
   summary: Inspect the Talos VEX document
+  tags:
+  - Enterprise Frontend API
+  description: >-
+    Returns VEX document status and headers without returning the document body.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: not-applicable
+  x-image-factory-min-talos-version: v1.13.0
   x-enterprise: true
   responses:
     '200':

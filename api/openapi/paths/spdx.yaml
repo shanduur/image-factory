@@ -9,6 +9,14 @@ parameters:
 get:
   operationId: getSPDX
   summary: Get a merged SPDX document
+  tags:
+  - Enterprise Frontend API
+  description: >-
+    Returns an SPDX 2.3 JSON document for Talos and the schematic system extensions.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: enforced
+  x-image-factory-min-talos-version: v1.11.0
   x-enterprise: true
   responses:
     '200':
@@ -26,6 +34,14 @@ get:
 head:
   operationId: headSPDX
   summary: Inspect a merged SPDX document
+  tags:
+  - Enterprise Frontend API
+  description: >-
+    Returns SPDX document status and headers without returning the document body.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: enforced
+  x-image-factory-min-talos-version: v1.11.0
   x-enterprise: true
   responses:
     '200':

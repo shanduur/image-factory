@@ -5,6 +5,13 @@
 post:
   operationId: createDownloadToken
   summary: Create a short-lived image download token
+  tags:
+  - Enterprise Frontend API
+  description: >-
+    Issues a short-lived JWT for authenticated image downloads; the optional ttl query parameter requests its lifetime.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: not-applicable
   x-enterprise: true
   parameters:
     - name: ttl

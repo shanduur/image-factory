@@ -7,6 +7,13 @@ parameters:
 get:
   operationId: getSchematic
   summary: Get a canonical schematic
+  tags:
+  - Frontend API
+  description: >-
+    Returns the canonical YAML representation of an existing schematic.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: enforced
   responses:
     '200':
       description: Canonical YAML schematic.

@@ -8,6 +8,15 @@ parameters:
 get:
   operationId: getRegistryBlob
   summary: Get or proxy an OCI blob
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns an OCI blob from the Image Factory repository or a configured upstream registry.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     '200':
       $ref: "../components/responses.yaml#/OCIResponse"
@@ -26,6 +35,15 @@ get:
 head:
   operationId: headRegistryBlob
   summary: Inspect an OCI blob
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns OCI blob status and headers without returning the blob body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     '200':
       $ref: "../components/responses.yaml#/OCIResponse"

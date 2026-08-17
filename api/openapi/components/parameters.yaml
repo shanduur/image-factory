@@ -58,6 +58,7 @@ Filename:
   schema:
     type: string
 DownloadToken:
+  x-enterprise: true
   name: token
   in: query
   required: false

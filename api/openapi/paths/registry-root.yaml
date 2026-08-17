@@ -5,6 +5,13 @@
 get:
   operationId: checkRegistry
   summary: Check OCI registry availability
+  tags:
+  - OCI Registry API
+  description: >-
+    Checks OCI Distribution API availability and returns the registry version header.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: not-applicable
   responses:
     '200':
       $ref: "../components/responses.yaml#/EmptyResponse"
@@ -15,6 +22,13 @@ get:
 head:
   operationId: headRegistry
   summary: Check OCI registry availability without a body
+  tags:
+  - OCI Registry API
+  description: >-
+    Checks OCI Distribution API availability without returning a body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: not-applicable
   responses:
     '200':
       $ref: "../components/responses.yaml#/EmptyResponse"

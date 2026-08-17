@@ -8,6 +8,10 @@ parameters:
 get:
   operationId: getTalosctl
   summary: Download a talosctl binary
+  tags:
+  - Frontend API
+  description: >-
+    Returns a talosctl binary for the requested Talos version and platform path.
   security: []
   responses:
     '200':
@@ -19,6 +23,10 @@ get:
 head:
   operationId: headTalosctl
   summary: Inspect a talosctl binary
+  tags:
+  - Frontend API
+  description: >-
+    Returns talosctl binary status and headers without returning the binary body.
   security: []
   responses:
     '200':

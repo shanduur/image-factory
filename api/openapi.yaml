@@ -13,6 +13,17 @@ info:
 security:
 - basicAuth: []
 - bearerAuth: []
+tags:
+- name: Enterprise Frontend API
+  description: Endpoints supplied by Enterprise Image Factory integrations.
+- name: Frontend API
+  description: Schematic, image, metadata, certificate, and client-download endpoints.
+- name: PXE Frontend API
+  description: Network-boot script endpoints.
+- name: OCI Registry API
+  description: OCI Distribution-compatible registry endpoints.
+- name: Machine-readable API
+  description: Self-describing API contract and automation-oriented reference endpoints.
 paths:
   /.well-known/jwks.json:
     $ref: "./openapi/paths/download-token-jwks.yaml"

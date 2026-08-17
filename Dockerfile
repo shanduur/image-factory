@@ -204,6 +204,7 @@ RUN mkdir -p internal/version/data && \
 # run the docgen
 FROM base AS docgen
 RUN --mount=type=cache,target=/root/.cache/go-build,id=image-factory/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=image-factory/go/pkg go run ./tools/docgen ./cmd/image-factory/cmd/options.go docs/configuration.md
+RUN --mount=type=cache,target=/root/.cache/go-build,id=image-factory/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=image-factory/go/pkg go run ./tools/openapi-docgen docs/api.md
 
 # builds the integration test binary
 FROM base AS integration-build
@@ -259,6 +260,7 @@ RUN echo -n 'undefined' > internal/version/data/sha && \
 # copies out the generated docs
 FROM scratch AS docs
 COPY --from=docgen /src/docs/configuration.md /configuration.md
+COPY --from=docgen /src/docs/api.md /api.md
 
 # copies out the integration test binary
 FROM scratch AS integration.test

@@ -8,6 +8,15 @@ parameters:
 get:
   operationId: getRegistryManifest
   summary: Get, build, or proxy an OCI manifest
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns, builds, or proxies an OCI manifest for the requested repository reference.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     '200':
       $ref: "../components/responses.yaml#/OCIResponse"
@@ -28,6 +37,15 @@ get:
 head:
   operationId: headRegistryManifest
   summary: Inspect an OCI manifest
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns OCI manifest status and headers without returning the manifest body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     '200':
       $ref: "../components/responses.yaml#/OCIResponse"

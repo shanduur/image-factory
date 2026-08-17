@@ -5,6 +5,10 @@
 get:
   operationId: getLLMsText
   summary: Get the LLM-oriented API reference
+  tags:
+  - Machine-readable API
+  description: >-
+    Returns a plain-text API reference intended for consumption by language models and other automated tools.
   security: []
   responses:
     '200':

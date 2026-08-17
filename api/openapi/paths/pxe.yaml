@@ -9,6 +9,13 @@ parameters:
 get:
   operationId: getPXEScript
   summary: Get an iPXE boot script
+  tags:
+  - PXE Frontend API
+  description: >-
+    Returns an iPXE script that boots the requested schematic, Talos version, and platform.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: enforced
   responses:
     '200':
       $ref: "../components/responses.yaml#/TextResponse"

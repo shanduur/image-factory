@@ -106,6 +106,83 @@ func TestDocumentationSchemas(t *testing.T) {
 	assert.Equal(t, "1h", ttl.Example)
 }
 
+func TestEndpointDocumentationMetadata(t *testing.T) {
+	t.Parallel()
+
+	document, err := api.Load(t.Context())
+	require.NoError(t, err)
+	require.NotEmpty(t, document.Tags)
+
+	declaredTags := make(map[string]struct{}, len(document.Tags))
+	for _, tag := range document.Tags {
+		declaredTags[tag.Name] = struct{}{}
+		assert.NotEmpty(t, tag.Description, "tag %s must describe its API group", tag.Name)
+	}
+
+	for path, pathItem := range document.Paths.Map() {
+		for method, operation := range pathItem.Operations() {
+			require.Len(t, operation.Tags, 1, "%s %s must have exactly one documentation tag", method, path)
+			_, ok := declaredTags[operation.Tags[0]]
+			assert.True(t, ok, "%s %s uses undeclared tag %q", method, path, operation.Tags[0])
+			assert.NotEmpty(t, operation.Description, "%s %s must have an endpoint description", method, path)
+
+			security := document.Security
+			if operation.Security != nil {
+				security = *operation.Security
+			}
+
+			if len(security) == 0 {
+				continue
+			}
+
+			value, ok := operation.Extensions["x-image-factory-access"]
+			require.True(t, ok, "%s %s must document Image Factory access behavior", method, path)
+			access, ok := value.(map[string]any)
+			require.True(t, ok, "%s %s access metadata must be an object", method, path)
+			assert.Contains(t, []any{"allowed", "denied"}, access["machineScope"], "%s %s has invalid machineScope", method, path)
+			assert.Contains(t, []any{"conditional", "enforced", "not-applicable", "sets-owner"}, access["ownership"], "%s %s has invalid ownership", method, path)
+
+			if operation.Tags[0] == "OCI Registry API" && strings.Contains(path, "{name+}") {
+				assert.Equal(t, "conditional", access["ownership"], "%s %s must document repository-dependent ownership", method, path)
+				assert.NotEmpty(t, access["ownershipDescription"], "%s %s must explain conditional ownership", method, path)
+			}
+		}
+	}
+}
+
+func TestEnterpriseDocumentationMarkers(t *testing.T) {
+	t.Parallel()
+
+	document, err := api.Load(t.Context())
+	require.NoError(t, err)
+
+	for path, pathItem := range document.Paths.Map() {
+		for method, operation := range pathItem.Operations() {
+			marked, ok := operation.Extensions["x-enterprise"].(bool)
+			assert.Equal(t, operation.Tags[0] == "Enterprise Frontend API", ok && marked, "%s %s", method, path)
+		}
+	}
+
+	requireEnterpriseMarker(t, "parameter DownloadToken", document.Components.Parameters["DownloadToken"].Value.Extensions)
+	requireEnterpriseMarker(t, "schema DownloadToken", document.Components.Schemas["DownloadToken"].Value.Extensions)
+	requireEnterpriseMarker(t, "schema Schematic.owner", document.Components.Schemas["Schematic"].Value.Properties["owner"].Value.Extensions)
+
+	for _, name := range []string{"SPDXResponse", "Unauthorized", "PaymentRequired", "Forbidden"} {
+		requireEnterpriseMarker(t, "response "+name, document.Components.Responses[name].Value.Extensions)
+	}
+
+	for _, name := range []string{"basicAuth", "bearerAuth", "downloadToken"} {
+		requireEnterpriseMarker(t, "security scheme "+name, document.Components.SecuritySchemes[name].Value.Extensions)
+	}
+}
+
+func requireEnterpriseMarker(t *testing.T, component string, extensions map[string]any) {
+	t.Helper()
+
+	marked, ok := extensions["x-enterprise"].(bool)
+	assert.True(t, ok && marked, "%s must set x-enterprise: true", component)
+}
+
 func TestUserFacingOperations(t *testing.T) {
 	t.Parallel()
 

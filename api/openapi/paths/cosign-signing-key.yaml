@@ -5,6 +5,10 @@
 get:
   operationId: getCosignSigningKey
   summary: Get the OCI and artifact-signing public key
+  tags:
+  - Frontend API
+  description: >-
+    Returns the public key used to verify OCI and generated-artifact signatures.
   security: []
   responses:
     '200':

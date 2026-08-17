@@ -103,6 +103,7 @@ Schematic:
   additionalProperties: false
   properties:
     owner:
+      x-enterprise: true
       type: string
       description: >-
         Enterprise-only owner identity. When authentication is enabled, the factory sets this
@@ -286,6 +287,7 @@ SchematicCreated:
             extraKernelArgs:
               - vga=791
 DownloadToken:
+  x-enterprise: true
   type: object
   description: Short-lived bearer token scoped to image downloads owned by the caller.
   additionalProperties: false

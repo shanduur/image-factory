@@ -5,6 +5,13 @@
 get:
   operationId: checkRegistrySlash
   summary: Check OCI registry availability through the trailing-slash alias
+  tags:
+  - OCI Registry API
+  description: >-
+    Checks OCI Distribution API availability through the trailing-slash alias.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: not-applicable
   responses:
     '200':
       $ref: "../components/responses.yaml#/EmptyResponse"
@@ -15,6 +22,13 @@ get:
 head:
   operationId: headRegistrySlash
   summary: Check the trailing-slash OCI registry alias without a body
+  tags:
+  - OCI Registry API
+  description: >-
+    Checks the trailing-slash OCI Distribution API alias without returning a body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: not-applicable
   responses:
     '200':
       $ref: "../components/responses.yaml#/EmptyResponse"

@@ -236,6 +236,7 @@ generate: helm-plugin-install  ## Generate .proto definitions.
 	fi
 	@$(MAKE) helm-docs
 	@$(MAKE) chart-gen-schema
+	@$(MAKE) docs
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@

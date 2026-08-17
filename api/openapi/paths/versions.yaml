@@ -5,7 +5,10 @@
 get:
   operationId: listVersions
   summary: List Talos versions
-  description: Returns available Talos versions, or broken versions when `broken` is exactly `true`.
+  tags:
+  - Frontend API
+  description: >-
+    Returns available Talos versions, or broken versions when `broken` is exactly `true`.
   security: []
   parameters:
   - name: broken

@@ -9,6 +9,15 @@ parameters:
 get:
   operationId: getRegistryReferrers
   summary: Discover or proxy OCI referrers
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns the OCI referrers index for a subject digest, from Image Factory or an upstream registry.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     '200':
       $ref: "../components/responses.yaml#/OCIIndexResponse"
@@ -25,6 +34,15 @@ get:
 head:
   operationId: headRegistryReferrers
   summary: Inspect OCI referrers
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns OCI referrers status and headers without returning the index body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     '200':
       $ref: "../components/responses.yaml#/OCIIndexHeaders"

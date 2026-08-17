@@ -7,6 +7,10 @@ parameters:
 get:
   operationId: listOfficialOverlays
   summary: List official overlays
+  tags:
+  - Frontend API
+  description: >-
+    Lists the official board overlays available for the requested Talos version.
   security: []
   responses:
     '200':

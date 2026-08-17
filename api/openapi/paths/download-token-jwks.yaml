@@ -5,6 +5,10 @@
 get:
   operationId: getDownloadTokenJWKS
   summary: Get download-token verification keys
+  tags:
+  - Enterprise Frontend API
+  description: >-
+    Returns the public JSON Web Key Set used to verify Image Factory download tokens.
   security: []
   x-enterprise: true
   responses:

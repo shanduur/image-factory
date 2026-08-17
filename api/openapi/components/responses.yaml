@@ -32,6 +32,7 @@ PEMResponse:
       schema:
         type: string
 SPDXResponse:
+  x-enterprise: true
   description: Downloadable SPDX 2.3 JSON document.
   headers:
     Content-Disposition:
@@ -118,6 +119,7 @@ BadRequest:
       schema:
         type: string
 Unauthorized:
+  x-enterprise: true
   description: Authentication is configured and credentials are missing or invalid.
   headers:
     WWW-Authenticate:
@@ -128,12 +130,14 @@ Unauthorized:
       schema:
         type: string
 PaymentRequired:
+  x-enterprise: true
   description: An Enterprise asset feature is unavailable.
   content:
     text/plain:
       schema:
         type: string
 Forbidden:
+  x-enterprise: true
   description: The authenticated principal is outside its scope or does not own the schematic.
   content:
     text/plain:

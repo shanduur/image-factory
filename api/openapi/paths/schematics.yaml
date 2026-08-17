@@ -5,7 +5,14 @@
 post:
   operationId: createSchematic
   summary: Create or identify a schematic
-  description: The body is decoded as YAML, which also accepts JSON, independently of the Content-Type header.
+  tags:
+  - Frontend API
+  description: >-
+    Validates a YAML or JSON schematic, stores its canonical representation, and returns its deterministic identifier.
+    The body is decoded as YAML, which also accepts JSON, independently of the Content-Type header.
+  x-image-factory-access:
+    machineScope: denied
+    ownership: sets-owner
   x-image-factory-ignore-content-type: true
   requestBody:
     required: true

@@ -5,6 +5,10 @@
 get:
   operationId: getSecureBootSigningCertificate
   summary: Get the Secure Boot signing certificate
+  tags:
+  - Frontend API
+  description: >-
+    Returns the PEM-encoded certificate used to sign Secure Boot artifacts.
   security: []
   responses:
     '200':

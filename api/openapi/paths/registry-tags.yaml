@@ -7,6 +7,15 @@ parameters:
 get:
   operationId: listRegistryTags
   summary: List or proxy OCI repository tags
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns the available tags for an Image Factory or proxied OCI repository.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     default:
       $ref: "../components/responses.yaml#/OCIResponse"
@@ -15,6 +24,15 @@ get:
 head:
   operationId: headRegistryTags
   summary: Inspect an OCI repository tag listing
+  tags:
+  - OCI Registry API
+  description: >-
+    Returns OCI tag-listing status and headers without returning the listing body.
+  x-image-factory-access:
+    machineScope: allowed
+    ownership: conditional
+    ownershipDescription: >-
+      Enforced for generated installer repositories and not applied to source-image proxy repositories.
   responses:
     default:
       $ref: "../components/responses.yaml#/OCIResponse"
