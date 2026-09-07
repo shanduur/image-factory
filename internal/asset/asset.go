@@ -38,19 +38,20 @@ type BootAsset interface {
 
 // Builder is the asset builder.
 type Builder struct {
-	metricConcurrencyLatency prometheus.Histogram
-	cache                    cache.Cache
-	metricBuildLatency       prometheus.Histogram
-	sf                       singleflight.Group
-	metricAssetsCached       *prometheus.CounterVec
-	logger                   *zap.Logger
-	metricAssetsBuilt        *prometheus.CounterVec
-	metricAssetBytesCached   *prometheus.CounterVec
-	metricAssetBytesBuilt    *prometheus.CounterVec
-	metricAssetCachedErrors  *prometheus.CounterVec
-	semaphore                chan struct{}
-	artifactsManager         *artifacts.Manager
-	cacheMightFail           bool
+	metricConcurrencyLatency  prometheus.Histogram
+	cache                     cache.Cache
+	metricBuildLatency        prometheus.Histogram
+	sf                        singleflight.Group
+	metricAssetsCached        *prometheus.CounterVec
+	logger                    *zap.Logger
+	metricAssetsBuilt         *prometheus.CounterVec
+	metricAssetBytesCached    *prometheus.CounterVec
+	metricAssetBytesBuilt     *prometheus.CounterVec
+	metricAssetCachedErrors   *prometheus.CounterVec
+	metricAssetCachePutErrors *prometheus.CounterVec
+	semaphore                 chan struct{}
+	artifactsManager          *artifacts.Manager
+	cacheMightFail            bool
 }
 
 // Options configures the asset builder.
@@ -105,6 +106,14 @@ func NewBuilder(logger *zap.Logger, artifactsManager *artifacts.Manager, cache c
 			prometheus.CounterOpts{
 				Name:      "image_factory_assets_cached_errors_total",
 				Help:      "Number of errors retrieving assets from cache.",
+				Namespace: options.MetricsNamespace,
+			},
+			[]string{"talos_version", "output_kind", "arch"},
+		),
+		metricAssetCachePutErrors: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name:      "image_factory_assets_cache_put_errors_total",
+				Help:      "Number of errors pushing built assets to the cache. A non-zero rate means assets are rebuilt on every request.",
 				Namespace: options.MetricsNamespace,
 			},
 			[]string{"talos_version", "output_kind", "arch"},
@@ -211,6 +220,10 @@ func (b *Builder) buildAndCache(reqID, profileHash string, prof profile.Profile,
 	b.metricAssetBytesBuilt.WithLabelValues(versionString, prof.Output.Kind.String(), prof.Arch).Add(float64(asset.Size()))
 
 	if err = b.cache.Put(ctx, profileHash, asset, filename); err != nil {
+		// The request still succeeds, so a cache that never accepts a write shows up only as
+		// every request rebuilding.
+		b.metricAssetCachePutErrors.WithLabelValues(versionString, prof.Output.Kind.String(), prof.Arch).Inc()
+
 		logger.Error("error putting asset to cache", zap.Error(err), zap.String("profile_hash", profileHash))
 	}
 
@@ -318,6 +331,7 @@ func (b *Builder) Collect(ch chan<- prometheus.Metric) {
 	b.metricAssetBytesCached.Collect(ch)
 
 	b.metricAssetCachedErrors.Collect(ch)
+	b.metricAssetCachePutErrors.Collect(ch)
 
 	b.metricBuildLatency.Collect(ch)
 	b.metricConcurrencyLatency.Collect(ch)

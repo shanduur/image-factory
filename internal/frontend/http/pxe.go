@@ -11,8 +11,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/julienschmidt/httprouter"
@@ -20,6 +22,9 @@ import (
 
 	"github.com/siderolabs/image-factory/internal/profile"
 )
+
+// pxeCacheTTL is how long an unauthenticated iPXE script may be cached downstream.
+const pxeCacheTTL = time.Hour
 
 //go:embed standard.ipxe
 var standardIPXE string
@@ -99,6 +104,11 @@ func (f *Frontend) handlePXE(ctx context.Context, w http.ResponseWriter, r *http
 			u.User = url.UserPassword(username, password)
 			imageBaseURL = &u
 		}
+	} else {
+		// No credential in the script and nothing per-caller: the schematic ID is
+		// content-addressed and the version pinned. Bounded rather than immutable, so an
+		// imager bump still rolls out.
+		w.Header().Set("Cache-Control", "public, max-age="+strconv.Itoa(int(pxeCacheTTL.Seconds())))
 	}
 
 	if prof.SecureBootEnabled() {

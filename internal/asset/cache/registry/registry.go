@@ -19,6 +19,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/siderolabs/image-factory/internal/asset/cache"
+	"github.com/siderolabs/image-factory/internal/ctxlog"
 	"github.com/siderolabs/image-factory/internal/image/signer"
 	"github.com/siderolabs/image-factory/internal/regtransport"
 	"github.com/siderolabs/image-factory/internal/remotewrap"
@@ -73,30 +74,52 @@ func New(logger *zap.Logger, options Options) (*Cache, error) {
 func (c *Cache) Get(ctx context.Context, profileID string) (cache.BootAsset, error) {
 	taggedRef := c.cacheRepository.Tag(profileID)
 
-	c.logger.Debug("heading cached image", zap.Stringer("ref", taggedRef))
+	// A cache hit does Head plus a signature verification, and either can dominate the
+	// request. Time them separately, and carry the request_id, so a slow hit is attributable
+	// to a phase and a caller rather than showing up as an unexplained gap.
+	logger := ctxlog.Logger(ctx, c.logger)
+
+	logger.Debug("heading cached image", zap.Stringer("ref", taggedRef))
+
+	headStart := time.Now()
 
 	desc, err := c.puller.Head(ctx, taggedRef)
-	if regtransport.IsStatusCodeError(err, http.StatusNotFound, http.StatusForbidden) {
-		// ignore 404/403, it means the image hasn't been pushed yet
-		return nil, cache.ErrCacheNotFound
-	}
 
-	if err != nil {
+	headLatency := time.Since(headStart)
+
+	switch {
+	case regtransport.IsStatusCodeError(err, http.StatusNotFound):
+		// the image hasn't been pushed yet
+		return nil, cache.ErrCacheNotFound
+	case regtransport.IsStatusCodeError(err, http.StatusForbidden):
+		// A 403 can mean an absent tag or a bad credential, so it stays a cache miss -- but
+		// log it, otherwise an unreadable cache looks exactly like a cold one.
+		logger.Warn("cache image not readable, treating as a cache miss", zap.Stringer("ref", taggedRef))
+
+		return nil, cache.ErrCacheNotFound
+	case err != nil:
 		// something is wrong
 		return nil, fmt.Errorf("failed to head cache image: %w", err)
 	}
 
 	digestRef := c.cacheRepository.Digest(desc.Digest.String())
 
+	verifyStart := time.Now()
+
 	err = c.imageSigner.VerifyImage(ctx, digestRef, c.puller)
+
+	verifyLatency := time.Since(verifyStart)
+
 	if err != nil {
 		// signature doesn't validate, skip the cache, but keep building
-		c.logger.Info("cache image signature doesn't validate", zap.Error(err), zap.Stringer("ref", taggedRef))
+		logger.Info("cache image signature doesn't validate", zap.Error(err), zap.Stringer("ref", taggedRef),
+			zap.Duration("head_latency", headLatency), zap.Duration("verify_latency", verifyLatency))
 
 		return nil, cache.ErrCacheNotFound
 	}
 
-	c.logger.Info("using cached image", zap.Stringer("ref", taggedRef))
+	logger.Info("using cached image", zap.Stringer("ref", taggedRef),
+		zap.Duration("head_latency", headLatency), zap.Duration("verify_latency", verifyLatency))
 
 	imgDesc, err := c.puller.Get(ctx, digestRef)
 	if err != nil {
@@ -134,7 +157,9 @@ func (c *Cache) Get(ctx context.Context, profileID string) (cache.BootAsset, err
 func (c *Cache) Put(ctx context.Context, profileID string, asset cache.BootAsset, _ string) error {
 	taggedRef := c.cacheRepository.Tag(profileID)
 
-	c.logger.Info("pushing cached image", zap.Stringer("ref", taggedRef))
+	logger := ctxlog.Logger(ctx, c.logger)
+
+	logger.Info("pushing cached image", zap.Stringer("ref", taggedRef))
 
 	layer, err := partial.CompressedToLayer(&layerWrapper{
 		src: asset,
@@ -161,7 +186,25 @@ func (c *Cache) Put(ctx context.Context, profileID string, asset cache.BootAsset
 
 	digestRef := c.cacheRepository.Digest(digest.String())
 
-	c.logger.Info("signing cache image", zap.Stringer("ref", digestRef))
+	// A cache manifest is content-addressed, so one signature over the digest stays valid for
+	// the life of the entry, and a miss on an entry that is already in the registry (a new
+	// Talos version whose asset is byte-identical, an object that lost its S3 metadata, a
+	// transient Get error) must not sign it again. Keyless signing writes each signature as a
+	// separate referrer, so re-signing grows a list that every later cache read has to walk:
+	// the metal-amd64 cmdline entry reached 205 referrers at ~0.68s each, a 140s cache hit.
+	//
+	// Asking the signer, rather than looking for an attached artifact, is what makes skipping
+	// safe: a referrer that is an SBOM, or a signature made under a since-rotated identity,
+	// does not satisfy the same check Get performs, so it is signed again instead of leaving
+	// an entry that never validates. Any error here means "not signed", so the failure
+	// direction is always to sign.
+	if err = c.imageSigner.VerifyImage(ctx, digestRef, c.puller); err == nil {
+		logger.Debug("cache image is already signed", zap.Stringer("ref", digestRef))
+
+		return nil
+	}
+
+	logger.Info("signing cache image", zap.Stringer("ref", digestRef))
 
 	if err := c.imageSigner.SignImage(
 		ctx,

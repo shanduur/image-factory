@@ -44,6 +44,9 @@ func downloadPXE(ctx context.Context, t *testing.T, baseURL string, schematicID,
 	if username, _ := authCredentials(); username != "" {
 		assert.Equal(t, "no-store", resp.Header.Get("Cache-Control"),
 			"the script embeds the Basic credentials it was fetched with")
+	} else {
+		assert.Equal(t, "public, max-age=3600", resp.Header.Get("Cache-Control"),
+			"an unauthenticated script carries no credential and is identical for every caller")
 	}
 
 	body, err := io.ReadAll(resp.Body)
