@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package http_test
+package ui_test
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v4"
 
-	"github.com/siderolabs/image-factory/internal/frontend/http"
+	"github.com/siderolabs/image-factory/internal/frontend/http/ui"
 )
 
 const testEmbdeddedMachineConfiguration = "apiVersion: v1alpha1/nkind: HostnameConfig/nhostname: my-custom-hostname/nauto: off"
@@ -20,8 +20,8 @@ const testEmbdeddedMachineConfiguration = "apiVersion: v1alpha1/nkind: HostnameC
 func TestSetValuesFromSchematic(t *testing.T) {
 	ctx := t.Context()
 
-	input := http.WizardParams{
-		Target:  http.TargetSBC,
+	input := ui.WizardParams{
+		Target:  ui.TargetSBC,
 		Version: "1.12.0",
 		BoardMeta: platforms.SBC{
 			OverlayName:  "rpi_5",
@@ -42,10 +42,10 @@ func TestSetValuesFromSchematic(t *testing.T) {
 	s, err := input.ToSchematic(ctx, nil)
 	require.NoError(t, err)
 
-	var got http.WizardParams
-	http.SetURLValuesFromSchematic(&got, &s)
+	var got ui.WizardParams
+	ui.SetURLValuesFromSchematic(&got, &s)
 
-	assert.Equal(t, http.TargetSBC, got.Target)
+	assert.Equal(t, ui.TargetSBC, got.Target)
 	assert.Equal(t, input.BoardMeta.OverlayName, got.BoardMeta.OverlayName)
 	assert.Equal(t, input.BoardMeta.OverlayImage, got.BoardMeta.OverlayImage)
 	assert.Equal(t, input.Cmdline, got.Cmdline)
@@ -74,7 +74,7 @@ func TestSetValuesFromSchematic(t *testing.T) {
 }
 
 func TestURLValuesOmitsEmbeddedConfig(t *testing.T) {
-	values := http.WizardParams{
+	values := ui.WizardParams{
 		Cmdline:        "console=tty0",
 		EmbeddedConfig: testEmbdeddedMachineConfiguration,
 		Version:        "v1.13.2",
