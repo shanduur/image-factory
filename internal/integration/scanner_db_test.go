@@ -364,7 +364,10 @@ func testScannerDBRotation(t *testing.T, options cmd.Options) {
 	// colliding with the factory commonTest is already running.
 	options.Metrics.Namespace = "rotation"
 
-	options.Enterprise.Scanner.DatabaseURL = mirror.databaseURL()
+	databaseURL, reloading, resumeReload := pauseGrypeDBReload(t, mirror)
+	defer resumeReload()
+
+	options.Enterprise.Scanner.DatabaseURL = databaseURL
 	options.Enterprise.Scanner.DatabaseUpdateAt = updateAt.Format("15:04")
 
 	// keep the synthetic database out of the shared installation directory, which
@@ -417,6 +420,16 @@ func testScannerDBRotation(t *testing.T, options cmd.Options) {
 	// goroutine, where the require calls inside reportDB could not fail the test
 	// properly.
 	deadline := time.Now().Add(time.Until(updateAt) + rotationRefreshTimeout)
+
+	select {
+	case <-reloading:
+	case <-time.After(time.Until(deadline)):
+		t.Fatal("scheduled database reload did not start")
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	}
+
+	checkScanDuringReload(ctx, t, baseURL, schematicID, resumeReload)
 
 	var after scanReportDB
 

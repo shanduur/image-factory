@@ -409,7 +409,7 @@ func (b *Builder) Stop() error {
 // Returns ErrNotReady (or the persistent init error) if the Grype DB has not
 // yet finished initializing.
 func (b *Builder) Build(ctx context.Context, schematicID, versionTag, arch string, format govexscanner.ReportFormat) ([]byte, error) {
-	if err := b.Ready(); err != nil {
+	if err := b.readyForScan(); err != nil {
 		return nil, err
 	}
 
@@ -419,6 +419,17 @@ func (b *Builder) Build(ctx context.Context, schematicID, versionTag, arch strin
 	}
 
 	return renderReport(*doc, sbomDoc, format)
+}
+
+// readyForScan waits for a DB replacement before checking readiness. Ready is
+// deliberately lock-free for health probes, but refresh temporarily clears the
+// scanner while holding the write lock. A scan must not turn that intermediate
+// state into ErrNotReady; scanSBOM uses the same lock when accessing the DB.
+func (b *Builder) readyForScan() error {
+	b.dbMu.RLock()
+	defer b.dbMu.RUnlock()
+
+	return b.Ready()
 }
 
 func (b *Builder) scan(ctx context.Context, schematicID, versionTag, arch string) (*models.Document, *sbom.SBOM, error) {
