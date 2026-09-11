@@ -151,7 +151,12 @@ func NewFrontend(
 
 	var err error
 
-	frontend.contract, err = api.NewContract(ctx)
+	var contractOptions []api.ContractOption
+	if provider, ok := opts.AuthProvider.(enterprise.BrowserLoginProvider); ok && provider.BrowserLoginEnabled() {
+		contractOptions = append(contractOptions, api.WithBrowserCallbackPath(provider.CallbackPath()))
+	}
+
+	frontend.contract, err = api.NewContract(ctx, contractOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OpenAPI contract: %w", err)
 	}
